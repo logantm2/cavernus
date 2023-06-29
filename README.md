@@ -27,7 +27,7 @@ A constitutive relation for the inelastic creep strain is required
 in order to close the system.
 We are interested in the case where the inelastic creep
 strain rate is a function of the displacement,
-$\dot{\epsilon}_{\mathrm{cr}} = \dot{\epsilon}_{\mathrm{cr}} ({u})$.
+$\dot{\epsilon_{\mathrm{cr}}} = \dot{\epsilon_{\mathrm{cr}}} ({u})$.
 This time dependence drives the evolution of ${u}$.
 
 A continuous finite element method is used to discretize the elasticity equation.
@@ -36,5 +36,3 @@ For each $v \in V$, a weak solution $u$ must satisfy
 $$\int_\Omega \nabla \cdot (C : \nabla^{\mathrm{s}}u) v \, \mathrm{d}V = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d} V$$
 $$\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \nabla^{\mathrm{s}} u) v \, \mathrm{d} S = - \int_\Omega \nabla v \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}S + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,$$
 where the second equation arises through integration by parts.
-
-$\dot{b}$
