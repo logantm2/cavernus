@@ -36,3 +36,5 @@ For each $v \in V$, a weak solution $u$ must satisfy
 $$\int_\Omega \nabla \cdot (C : \nabla^{\mathrm{s}}u) v \, \mathrm{d}V = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d} V$$
 $$\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \nabla^{\mathrm{s}} u) v \, \mathrm{d} S = - \int_\Omega \nabla v \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}S + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,$$
 where the second equation arises through integration by parts.
+
+$\dot{b}$
