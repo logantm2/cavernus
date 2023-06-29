@@ -6,7 +6,7 @@ Salt cavern rock moves with a velocity that is small compared to
 $L/\tau$, where $L$ and $\tau$ are characteristic length and time scales
 of the system, respectively.
 They are therefore well described quasistatically.
-The displacement ${u} = {u}({x}, t)$ of the rock from
+The displacement ${u} = {u}({x}, t) \rightarrow \mathbb{R}^d$ of the rock from
 its unforced state in a $d$-dimensional
 domain $\Omega$ is governed by the elasticity equation,
 which can be written as
@@ -14,8 +14,8 @@ $$\nabla \cdot (C : \nabla^{\mathrm{s}} {u}) = \nabla \cdot (C : \epsilon_{\math
 $${u} = {g} \text{ on } \Gamma_{\mathrm{D}}$$
 $$\hat{n} \cdot (C : \nabla^{\mathrm{s}} {u}) = {h} \text{ on } \Gamma_{\mathrm{N}},$$
 where $C = C({x}, t)$ is the elasticity or stiffness tensor,
-$\nabla^{\mathrm{s}} = \frac{1}{2}(\nabla + \nabla^T)$ is the symmetrized gradient,
-$\epsilon_{\mathrm{cr}}$ is the inelastic creep strain,
+$\nabla^{\mathrm{s}} = \frac{1}{2}(\nabla + \nabla^t)$ is the symmetrized gradient,
+$\epsilon_{\mathrm{cr}} \rightarrow \mathbb{R}^M$ is the inelastic creep strain,
 $f^{\mathrm{b}} = f^{\mathrm{b}}({x}, t)$ is a known body force,
 ${g} = {g}({x}, t)$ is a Dirichlet boundary condition
 imposed on a portion of the boundary $\Gamma_{\mathrm{D}}$,
@@ -35,37 +35,50 @@ This time dependence drives the evolution of ${u}$.
 A continuous finite element method is used to discretize the elasticity equation
 in space.
 Let $V \subset H^1(\Omega)$ be a subspace of a Sobolev space on $\Omega$.
-For each $v \in V$, weak solutions $u, \epsilon_{\mathrm{cr}}$ must satisfy
-$$\int_\Omega \nabla \cdot (C : \nabla^{\mathrm{s}}u) v \, \mathrm{d}V = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d} V$$
-$$\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V + \int_{\Gamma_{\mathrm{N}}} h v \, \mathrm{d} S = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,$$
-where the second equation arises through integration by parts.
+For each $v \in V^d$, weak solutions $u, \epsilon_{\mathrm{cr}}$ must satisfy
+$$\int_\Omega v \cdot \nabla \cdot (C : \nabla^{\mathrm{s}}u) \, \mathrm{d}V = \int_{\Omega} v \cdot \nabla \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} \cdot v \, \mathrm{d} V$$
+$$\Rightarrow - \int_{\Omega} \langle \nabla v, (C : \nabla^{\mathrm{s}} u) \rangle_{\mathrm{F}} \, \mathrm{d}V + \int_{\Gamma_{\mathrm{N}}} h \cdot v \, \mathrm{d} S = \int_{\Omega} v \cdot \nabla \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} \cdot v \, \mathrm{d}V,$$
+where the second equation arises through integration by parts
+and $\langle \cdot, \cdot \rangle_{\mathrm{F}}$ denotes the
+Frobenius inner product.
 
 Let $V_h \subset V$ be a finite-dimensional subspace of $V$
 parametrized by a length scale $h$
-and let $\{ \psi_1, \ldots, \psi_N\}$ be a basis for $V_h$.
+and let $B_h = \{ \psi_1, \ldots, \psi_N\}$ be a basis for $V_h$.
 Approximate the exact solutions as
-$$u \approx u_h = \sum_{i=1}^N u_i \psi_i,$$
-$$\epsilon_{\mathrm{cr}} \approx \epsilon_h = \sum_{i=1}^N \epsilon_i \psi_i.$$
+$$u \approx u_h = \sum_{i=1}^{Nd} u_i \hat{\psi_i},$$
+$$\epsilon_{\mathrm{cr}} \approx \epsilon_h = \sum_{i=1}^{Nd(d+1)/2} \epsilon_i \bar{\psi_i},$$
+where $\hat{\psi_i} \in B_h^d$ and $\bar{\psi_i} \in B_h^M$.
 Now $u_h$ and $\epsilon_h$ must satisfy
-$$-\sum_{j=1}^N u_j \int_\Omega \nabla \psi_i \cdot (C : \nabla^{\mathrm{s}} \psi_j) \, \mathrm{d}V = - \int_{\Gamma_{\mathrm{N}}} h \psi_i \, \mathrm{d}S + \sum_{j=1}^N \epsilon_j \int_{\Omega} \nabla \cdot (C : \psi_j) \psi_i \, \mathrm{d}V+ \int_\Omega f^{\mathrm{b}} \psi_i \, \mathrm{d} V$$
-for each $1 \leq i \leq N$.
-Let $K$ be the matrix whose entries are given by
-$$K_{ij} = - \int_\Omega \nabla \psi_i \cdot (C : \nabla^{\mathrm{s}} \psi_j) \, \mathrm{d}V,$$
-let $G^{\mathrm{int}} = G^{\mathrm{int}}(\epsilon_{\mathrm{cr}})$
-and $G^{\mathrm{bdr}} = G^{\mathrm{bdr}}(\epsilon_{\mathrm{cr}})$
-be the operators defined by
-$$G_i^{\mathrm{int}}(\epsilon_{\mathrm{cr}}) = - \int_\Omega \nabla \psi_i \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V,$$
-$$G_i^{\mathrm{bdr}}(\epsilon_{\mathrm{cr}}) = \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) \psi_i \, \mathrm{d}S,$$
+$$-\sum_{j=1}^{Nd} u_j \int_\Omega \langle \nabla \hat{\psi_i}, (C : \nabla^{\mathrm{s}} \hat{\psi_j}) \rangle_{\mathrm{F}} \, \mathrm{d}V = - \int_{\Gamma_{\mathrm{N}}} h \cdot \hat{\psi_i} \, \mathrm{d}S + \sum_{j=1}^{Nd(d+1)/2} \epsilon_j \int_{\Omega} \hat{\psi_i} \cdot \nabla \cdot (C : \bar{\psi_j}) \, \mathrm{d}V+ \int_\Omega f^{\mathrm{b}} \cdot \hat{\psi_i} \, \mathrm{d} V$$
+for each $\hat{\psi_i} \in B_h^d$.
+Let $K$ be the $Nd \times Nd$ matrix whose entries are given by
+$$K_{ij} = - \int_\Omega \langle \nabla \hat{\psi_i} \cdot (C : \nabla^{\mathrm{s}} \hat{\psi_j}) \rangle_{\mathrm{F}} \, \mathrm{d}V,$$
+let $G$ be the $Nd \times Nd(d+1)/2$ matrix whose entries are given by
+$$G_{ij} = \int_{\Omega} \hat{\psi_i} \cdot \nabla \cdot (C : \bar{\psi_j}) \, \mathrm{d}V$$
 and let $\vec{b}$ and $\vec{h}$ be the vectors whose entries are given by
-$$b_i = \int_\Omega f^{\mathrm{b}} \psi_i \, \mathrm{d}V,$$
-$$h_i = - \int_{\Gamma_{\mathrm{N}}} h \psi_i \, \mathrm{d}S.$$
+$$b_i = \int_\Omega f^{\mathrm{b}} \cdot \hat{\psi_i} \, \mathrm{d}V,$$
+$$h_i = - \int_{\Gamma_{\mathrm{N}}} h \cdot \hat{\psi_i} \, \mathrm{d}S.$$
 Then the weak form of the elasticity equation becomes
-$$K \vec{u} = G^{\mathrm{int}} (\epsilon_{\mathrm{cr}}) + G^{\mathrm{bdr}}(\epsilon_{\mathrm{cr}}) + \vec{b} + \vec{h}.$$
+$$K \vec{u} = G \vec{\epsilon} + \vec{b} + \vec{h},$$
+where $\vec{u} = (u_1, \ldots, u_{Nd})^t$
+and $\vec{\epsilon} = (\epsilon_1, \ldots, \epsilon_{Nd(d+1)/2})^t$.
 
 Recall that the time evolution of the system is governed by
 the inelastic creep strain rate
-$$\frac{\mathrm{d} \epsilon_{\mathrm{cr}}}{\mathrm{d}t} = F(u, \epsilon_{\mathrm{cr}}) \approx F(\vec{u}, \epsilon_{\mathrm{cr}}),$$
-$$\epsilon_{\mathrm{cr}}(t=0) = \epsilon_0.$$
+$$\frac{\mathrm{d} \epsilon_{\mathrm{cr}}}{\mathrm{d}t} = F(u, \epsilon_{\mathrm{cr}}),$$
+$$\epsilon_{\mathrm{cr}}(t=0) = \epsilon^0.$$
+The weak solution $\epsilon_h$ must satisfy the weak form
+$$\frac{\mathrm{d}}{\mathrm{d}t} \sum_{j=1}^{Nd(d+1)/2} \epsilon_j \int_\Omega \langle \bar{\psi_i}, \bar{\psi_j} \rangle_{\mathrm{F}} \, \mathrm{d}V = \int_\Omega \langle F(u_h, \epsilon_h), \bar{\psi_i} \rangle_{\mathrm{F}} \, \mathrm{d}V$$
+for each $\bar{\psi_i} \in B_h^M$.
+Let $M$ be the matrix whose entries are given by
+$$M_{ij} = \int_\Omega \langle \bar{\psi_i}, \bar{\psi_j} \rangle_{\mathrm{F}} \, \mathrm{d}V,$$
+and let $\vec{F}(u, \epsilon_{\mathrm{cr}})$ be the
+nonlinear operator whose entries are given by
+$$F_i(u, \epsilon_{\mathrm{cr}}) = \int_\Omega \langle F(u_h, \epsilon_h), \bar{\psi_i} \rangle_{\mathrm{F}} \, \mathrm{d}V.$$
+The weak form becomes
+$$\frac{\mathrm{d} \vec{\epsilon}}{\mathrm{d}t} = M^{-1} \vec{F} (u_h, \epsilon_h).$$
+
 An interval of time is uniformly partitioned into time steps of size $\Delta t$.
 We use the family of Runge-Kutta (RK) ordinary differential equation integrators
 to progress from $t=0$ in time steps.
