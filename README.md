@@ -75,7 +75,7 @@ Let $M$ be the matrix whose entries are given by
 $$M_{ij} = \int_\Omega \langle \bar{\psi_i}, \bar{\psi_j} \rangle_{\mathrm{F}} \, \mathrm{d}V,$$
 and let $\vec{F}(u, \epsilon_{\mathrm{cr}})$ be the
 nonlinear operator whose entries are given by
-$$F_i(u, \epsilon_{\mathrm{cr}}) = \int_\Omega \langle F(u_h, \epsilon_h), \bar{\psi_i} \rangle_{\mathrm{F}} \, \mathrm{d}V.$$
+$$F_i(u, \epsilon_{\mathrm{cr}}) = \int_\Omega \langle F(u, \epsilon_{\mathrm{cr}}), \bar{\psi_i} \rangle_{\mathrm{F}} \, \mathrm{d}V.$$
 This document will also occasionally denote
 $$\vec{F}(\vec{u}, \vec{\epsilon}) = \vec{F} \left( \sum_{i=1}^{Nd} u_i \hat{\psi_i}, \sum_{i=1}^{Nd(d+1)/2} \epsilon_i \bar{\psi_i}\right) $$
 for brevity.
