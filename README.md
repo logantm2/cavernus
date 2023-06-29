@@ -122,7 +122,11 @@ which is a single-stage method whose Butcher tableau is
 LTM add butcher tableau here
 
 Written explicitly,
-$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t M^{-1} \vec{F}(\vec{u}^n, \vec{\epsilon}^n).$$
+$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t M^{-1} \vec{F}(\vec{u}^n, \vec{\epsilon}^n),$$
+$$K \vec{u}^{n+1} = G \vec{\epsilon}^{n+1} + \vec{b}^{n+1} + \vec{h}^{n+1}.$$
+With this method, the inelastic creep strain at the next time step
+can be directly written using quantities from the current time step.
+The displacement at the next time step can then be solved as usual.
 
 ## Implicit RK methods
 Implicit methods do not have lower triangular $a$ matrices.
