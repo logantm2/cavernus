@@ -7,7 +7,8 @@ $L/\tau$, where $L$ and $\tau$ are characteristic length and time scales
 of the system, respectively.
 They are therefore well described quasistatically.
 The displacement ${u} = {u}({x}, t)$ of the rock from
-its unforced state in a domain $\Omega$ is governed by the elasticity equation,
+its unforced state in a $d$-dimensional
+domain $\Omega$ is governed by the elasticity equation,
 which can be written as
 $$\nabla \cdot (C : \nabla^{\mathrm{s}} {u}) = \nabla \cdot (C : \epsilon_{\mathrm{cr}}) + f^{\mathrm{b}} \text{ in } \Omega,$$
 $${u} = {g} \text{ on } \Gamma_{\mathrm{D}}$$
@@ -34,18 +35,20 @@ This time dependence drives the evolution of ${u}$.
 A continuous finite element method is used to discretize the elasticity equation
 in space.
 Let $V \subset H^1(\Omega)$ be a subspace of a Sobolev space on $\Omega$.
-For each $v \in V$, a weak solution $u$ must satisfy
+For each $v \in V$, weak solutions $u, \epsilon_{\mathrm{cr}}$ must satisfy
 $$\int_\Omega \nabla \cdot (C : \nabla^{\mathrm{s}}u) v \, \mathrm{d}V = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d} V$$
-$$\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V + \int_{\Gamma_{\mathrm{N}}} h v \, \mathrm{d} S = - \int_\Omega \nabla v \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}S + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,$$
+$$\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V + \int_{\Gamma_{\mathrm{N}}} h v \, \mathrm{d} S = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,$$
 where the second equation arises through integration by parts.
 
 Let $V_h \subset V$ be a finite-dimensional subspace of $V$
 parametrized by a length scale $h$
 and let $\{ \psi_1, \ldots, \psi_N\}$ be a basis for $V_h$.
-Approximate the exact solution as
-$$u \approx u_h = \sum_{i=1}^N u_i \psi_i.$$
-Now $u_h$ must satisfy
-$$-\sum_{j=1}^N u_j \int_\Omega \nabla \psi_i \cdot (C : \nabla^{\mathrm{s}} \psi_j) \, \mathrm{d}V = - \int_{\Gamma_{\mathrm{N}}} h \psi_i \, \mathrm{d}S - \int_\Omega \nabla \psi_i \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) \psi_i \, \mathrm{d}S + \int_\Omega f^{\mathrm{b}} \psi_i \, \mathrm{d} V.$$
+Approximate the exact solutions as
+$$u \approx u_h = \sum_{i=1}^N u_i \psi_i,$$
+$$\epsilon_{\mathrm{cr}} \approx \epsilon_h = \sum_{i=1}^N \epsilon_i \psi_i.$$
+Now $u_h$ and $\epsilon_h$ must satisfy
+$$-\sum_{j=1}^N u_j \int_\Omega \nabla \psi_i \cdot (C : \nabla^{\mathrm{s}} \psi_j) \, \mathrm{d}V = - \int_{\Gamma_{\mathrm{N}}} h \psi_i \, \mathrm{d}S + \sum_{j=1}^N \epsilon_j \int_{\Omega} \nabla \cdot (C : \psi_j) \psi_i \, \mathrm{d}V+ \int_\Omega f^{\mathrm{b}} \psi_i \, \mathrm{d} V$$
+for each $1 \leq i \leq N$.
 Let $K$ be the matrix whose entries are given by
 $$K_{ij} = - \int_\Omega \nabla \psi_i \cdot (C : \nabla^{\mathrm{s}} \psi_j) \, \mathrm{d}V,$$
 let $G^{\mathrm{int}} = G^{\mathrm{int}}(\epsilon_{\mathrm{cr}})$
