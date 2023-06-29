@@ -76,8 +76,11 @@ $$M_{ij} = \int_\Omega \langle \bar{\psi_i}, \bar{\psi_j} \rangle_{\mathrm{F}} \
 and let $\vec{F}(u, \epsilon_{\mathrm{cr}})$ be the
 nonlinear operator whose entries are given by
 $$F_i(u, \epsilon_{\mathrm{cr}}) = \int_\Omega \langle F(u_h, \epsilon_h), \bar{\psi_i} \rangle_{\mathrm{F}} \, \mathrm{d}V.$$
+This document will also occasionally denote
+$$\vec{F}(\vec{u}, \vec{\epsilon}) = \vec{F} \left( \sum_{i=1}^{Nd} u_i \hat{\psi_i}, \sum_{i=1}^{Nd(d+1)/2} \epsilon_i \bar{\psi_i}\right) $$
+for brevity.
 The weak form becomes
-$$\frac{\mathrm{d} \vec{\epsilon}}{\mathrm{d}t} = M^{-1} \vec{F} (u_h, \epsilon_h).$$
+$$\frac{\mathrm{d} \vec{\epsilon}}{\mathrm{d}t} = M^{-1} \vec{F} (\vec{u}, \vec{\epsilon}).$$
 
 An interval of time is uniformly partitioned into time steps of size $\Delta t$.
 We use the family of Runge-Kutta (RK) ordinary differential equation integrators
@@ -87,11 +90,11 @@ we use a superscript to denote the time step at which a time-dependent
 quantity is evaluated,
 as $\xi^n = \xi(n \Delta t)$.
 RK methods estimate the value at the next time step as
-$$\epsilon_{\mathrm{cr}}^{n+1} = \epsilon_{\mathrm{cr}}^n + \Delta t \sum_{i=1}^s b_i k_i,$$
-where
-$$k_i = F \left( \vec{y}_i, \epsilon_{\mathrm{cr}}^n + \Delta t \sum_{j=1}^s a_{ij} k_j \right),$$
-$\vec{y}_i$ is the solution for $\vec{u}$ given
-$\epsilon_{\mathrm{cr}} = \epsilon_{\mathrm{cr}}^n + \Delta t \sum_{j=1}^s a_{ij} k_j$ at time $t = t^n + c_i \Delta t$,
+$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t \sum_{i=1}^s b_i \vec{k}_i,$$
+where $\vec{k}_i, \vec{y}_i$ satisfy
+$$M \vec{k}_i = \vec{F} \left( \vec{y}_i, \vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k}_j \right),$$
+$$K \vec{y}_i = G (\vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k}_j) + \vec{b} + \vec{h}$$
+with $t = t^n + c_i \Delta t$,
 $s$ is known as the number of stages for the particular method,
 and the $a_{ij}$, $b_i$, and $c_i$ are constants that depend on the
 specific choice of method.
@@ -111,11 +114,7 @@ These will be discussed respectively in the following sections.
 For explicit methods, $a_{ij} = 0$ if $j \geq i$.
 In other words, the $a$ matrix is strictly lower triangular.
 The main consequence of this is that
-$k_i$ at some stage depends only on the values of $k_j$ for previous stages,
-so that $\vec{y}_i$ is the solution for $\vec{u}$ given
-$\epsilon_{\mathrm{cr}} = \epsilon_{\mathrm{cr}}^n + \Delta t \sum_{j=1}^{i-1} a_{ij} k_j$ at time $t=t^n + c_i \Delta t$.
-In other words, the estimates at each stage can be explicitly evaluated
-from estimates at previous stages.
+$\vec{k}_i$ at some stage depends only on the values of $\vec{k}_j$ for previous stages.
 
 The simplest example of an explicit RK methods is the forward Euler method,
 which is a single-stage method whose Butcher tableau is
@@ -123,7 +122,7 @@ which is a single-stage method whose Butcher tableau is
 LTM add butcher tableau here
 
 Written explicitly,
-$$\epsilon_{\mathrm{cr}}^{n+1} = \epsilon_{\mathrm{cr}}^n + \Delta t F(\vec{u}^n, \epsilon_{\mathrm{cr}}^n).$$
+$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t M^{-1} \vec{F}(\vec{u}^n, \vec{\epsilon}^n).$$
 
 ## Implicit RK methods
 Implicit methods do not have lower triangular $a$ matrices.
@@ -135,4 +134,4 @@ which is a single-stage method whose Butcher tableau is
 LTM add butcher tableau here
 
 Written explicitly,
-$$\epsilon_{\mathrm{cr}}^{n+1} = \epsilon_{\mathrm{cr}}^n + \Delta t F(\vec{u}^{n+1}, \epsilon_{\mathrm{cr}}^{n+1}).$$
+$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t M^{-1} \vec{F}(\vec{u}^{n+1}, \vec{\epsilon}^{n+1}).$$
