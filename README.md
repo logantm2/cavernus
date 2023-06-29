@@ -9,13 +9,9 @@ They are therefore well described quasistatically.
 The displacement ${u} = {u}({x}, t)$ of the rock from
 its unforced state in a domain $\Omega$ is governed by the elasticity equation,
 which can be written as
-$$
-\begin{align}
-\nabla \cdot (C : \nabla^{\mathrm{s}} {u}) = \nabla \cdot (C : \epsilon_{\mathrm{cr}}) + f^{\mathrm{b}} && \text{in } \Omega, \\
-{u} = {g} && \text{on } \Gamma_{\mathrm{D}}, \\
-\hat{n} \cdot (C : \nabla^{\mathrm{s}} {u}) = {h} && \text{on } \Gamma_{\mathrm{N}},
-\end{align}
-$$
+$$\nabla \cdot (C : \nabla^{\mathrm{s}} {u}) = \nabla \cdot (C : \epsilon_{\mathrm{cr}}) + f^{\mathrm{b}} \text{ in } \Omega,$$
+$${u} = {g} \text{ on } \Gamma_{\mathrm{D}}$$
+$$\hat{n} \cdot (C : \nabla^{\mathrm{s}} {u}) = {h} \text{ on } \Gamma_{\mathrm{N}},$$
 where $C = C({x}, t)$ is the elasticity or stiffness tensor,
 $\nabla^{\mathrm{s}} = \frac{1}{2}(\nabla + \nabla^T)$ is the symmetrized gradient,
 $\epsilon_{\mathrm{cr}}$ is the inelastic creep strain,
@@ -38,8 +34,5 @@ A continuous finite element method is used to discretize the elasticity equation
 Let $V \subset H^1(\Omega)$ be a subspace of a Sobolev space on $\Omega$.
 For each $v \in V$, a weak solution $u$ must satisfy
 $$\int_\Omega \nabla \cdot (C : \nabla^{\mathrm{s}}u) v \, \mathrm{d}V = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d} V$$
-$$\begin{align*}
-\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V &+ \int_{\partial \Omega} \hat{n} \cdot (C : \nabla^{\mathrm{s}} u) v \, \mathrm{d} S \\
-&= - \int_\Omega \nabla v \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}S + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,
-\end{align*}$$
+$$\Rightarrow - \int_{\Omega} \nabla v \cdot (C : \nabla^{\mathrm{s}} u) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \nabla^{\mathrm{s}} u) v \, \mathrm{d} S = - \int_\Omega \nabla v \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\partial \Omega} \hat{n} \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}S + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d}V,$$
 where the second equation arises through integration by parts.
