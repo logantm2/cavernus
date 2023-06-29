@@ -30,7 +30,8 @@ strain rate is a function of the displacement,
 $\dot{\epsilon_{\mathrm{cr}}} = \dot{\epsilon_{\mathrm{cr}}} ({u})$.
 This time dependence drives the evolution of ${u}$.
 
-A continuous finite element method is used to discretize the elasticity equation.
+A continuous finite element method is used to discretize the elasticity equation
+in space.
 Let $V \subset H^1(\Omega)$ be a subspace of a Sobolev space on $\Omega$.
 For each $v \in V$, a weak solution $u$ must satisfy
 $$\int_\Omega \nabla \cdot (C : \nabla^{\mathrm{s}}u) v \, \mathrm{d}V = \int_{\Omega} \nabla \cdot (C : \epsilon_{\mathrm{cr}}) v \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} v \, \mathrm{d} V$$
