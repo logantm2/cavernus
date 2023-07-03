@@ -92,8 +92,8 @@ as $\xi^n = \xi(n \Delta t)$.
 RK methods estimate the value at the next time step as
 $$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t \sum_{i=1}^s b_i \vec{k}_i,$$
 where $\vec{k}_i, \vec{y}_i$ satisfy
-$$M \vec{k}_i = \vec{F} \left( \vec{y}_i, \vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k}_j \right),$$
-$$K \vec{y}_i = G (\vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k}_j) + \vec{b} + \vec{h}$$
+$$M \vec{k_i} = \vec{F} \left( \vec{y}_i, \vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k_j} \right),$$
+$$K \vec{y_i} = G (\vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k_j}) + \vec{b} + \vec{h}$$
 with $t = t^n + c_i \Delta t$,
 $s$ is known as the number of stages for the particular method,
 and the $a_{ij}$, $b_i$, and $c_i$ are constants that depend on the
