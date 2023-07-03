@@ -138,4 +138,37 @@ which is a single-stage method whose Butcher tableau is
 LTM add butcher tableau here
 
 Written explicitly,
-$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t M^{-1} \vec{F}(\vec{u}^{n+1}, \vec{\epsilon}^{n+1}).$$
+$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t M^{-1} \vec{F}(\vec{u}^{n+1}, \vec{\epsilon}^{n+1}),$$
+$$K \vec{u}^{n+1} = G \vec{\epsilon}^{n+1} + \vec{b}^{n+1} + \vec{h}^{n+1}.$$
+Unlike the forward Euler case, we must simultaneously solve
+for the inelastic creep strain and the displacement at the next time step.
+The problem also requires a nonlinear solve.
+There are many options, but the Newton-Raphson method is extremely robust
+and simple.
+Define the residuals for the inelastic creep strain and displacement as
+$$\vec{R_\epsilon} = M (\vec{\epsilon}^{n+1} - \vec{\epsilon}^n) - \Delta t \vec{F}(\vec{u}^{n+1}, \vec{\epsilon}^{n+1}),$$
+$$\vec{R_u} = K \vec{u}^{n+1} - G \vec{\epsilon}^{n+1} - \vec{b}^{n+1} - \vec{h}^{n+1}.$$
+The goal is to find $\vec{\epsilon}^{n+1}, \vec{u}^{n+1}$ such that
+the residuals are zero.
+The Jacobians for the residuals are
+$$J_{\epsilon,\epsilon} = \frac{\partial \vec{R}_{\epsilon}}{\partial \vec{\epsilon}^{n+1}} = M - \Delta t \frac{\partial \vec{F}}{\partial \vec{\epsilon}^{n+1}},$$
+$$J_{\epsilon,u} = \frac{\partial \vec{R}_\epsilon}{\partial \vec{u}^{n+1}} = - \Delta t \frac{\partial \vec{F}}{\partial \vec{u}^{n+1}},$$
+$$J_{u,\epsilon} = \frac{\partial \vec{R}_u}{\partial \vec{\epsilon}^{n+1}} = -G,$$
+$$J_{u,u} = \frac{\partial \vec{R}_u}{\partial \vec{u}^{n+1}} = K.$$
+The Newton-Raphson method proceeds iteratively.
+Hereafter, $n+1$ superscripts are replaced by an $i$ superscript denoting the
+current iteration.
+An initial guess $\vec{u}^0, \vec{\epsilon}^0$ is provided;
+this is typically the solution from the previous time step.
+Denoting $\delta \vec{u}^{i+1} = \vec{u}^{i+1} - \vec{u}^i$
+and $\delta \vec{\epsilon}^{i+1} = \vec{\epsilon}^{i+1} - \vec{\epsilon}^i$,
+we solve the linear problem
+$$J_{\epsilon,\epsilon} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{\epsilon}^{i+1} + J_{\epsilon,u} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{u}^{i+1} = -\vec{R}_\epsilon (\vec{\epsilon}^i, \vec{u}^i),$$
+$$J_{u,\epsilon} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{\epsilon}^{i+1} + J_{u,u} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{u}^{i+1} = -\vec{R}_u (\vec{\epsilon}^i, \vec{u}^i),$$
+then update the iterate indices.
+Iteration continues until the magnitude of the residuals is acceptably small.
+If we let $\vec{w}^i = (\vec{u}^i, \vec{\epsilon}^i)^t$, $\vec{R} = (\vec{R_u}, \vec{R_\epsilon})^t$, and
+$$J = \begin{pmatrix} J_{u,u} & J_{u,\epsilon} \\ J_{\epsilon,u} & J_{\epsilon,\epsilon} \end{pmatrix},$$
+then the Newton-Raphson iteration can be written more simply as solving
+the linear problem
+$$J(\vec{w}^i) \delta \vec{w}^{i+1} = -\vec{R}(\vec{w}^i).$$
