@@ -151,10 +151,10 @@ $$\vec{R_u} = K \vec{u}^{n+1} - G \vec{\epsilon}^{n+1} - \vec{b}^{n+1} - \vec{h}
 The goal is to find $\vec{\epsilon}^{n+1}, \vec{u}^{n+1}$ such that
 the residuals are zero.
 The Jacobians for the residuals are
-$$J_{\epsilon,\epsilon} = \frac{\partial \vec{R}_{\epsilon}}{\partial \vec{\epsilon}^{n+1}} = M - \Delta t \frac{\partial \vec{F}}{\partial \vec{\epsilon}^{n+1}},$$
-$$J_{\epsilon,u} = \frac{\partial \vec{R}_\epsilon}{\partial \vec{u}^{n+1}} = - \Delta t \frac{\partial \vec{F}}{\partial \vec{u}^{n+1}},$$
-$$J_{u,\epsilon} = \frac{\partial \vec{R}_u}{\partial \vec{\epsilon}^{n+1}} = -G,$$
-$$J_{u,u} = \frac{\partial \vec{R}_u}{\partial \vec{u}^{n+1}} = K.$$
+$$J_{\epsilon,\epsilon} = \frac{\partial \vec{R_{\epsilon}}}{\partial \vec{\epsilon}^{n+1}} = M - \Delta t \frac{\partial \vec{F}}{\partial \vec{\epsilon}^{n+1}},$$
+$$J_{\epsilon,u} = \frac{\partial \vec{R_\epsilon}}{\partial \vec{u}^{n+1}} = - \Delta t \frac{\partial \vec{F}}{\partial \vec{u}^{n+1}},$$
+$$J_{u,\epsilon} = \frac{\partial \vec{R_u}}{\partial \vec{\epsilon}^{n+1}} = -G,$$
+$$J_{u,u} = \frac{\partial \vec{R_u}}{\partial \vec{u}^{n+1}} = K.$$
 The Newton-Raphson method proceeds iteratively.
 Hereafter, $n+1$ superscripts are replaced by an $i$ superscript denoting the
 current iteration.
@@ -163,8 +163,8 @@ this is typically the solution from the previous time step.
 Denoting $\delta \vec{u}^{i+1} = \vec{u}^{i+1} - \vec{u}^i$
 and $\delta \vec{\epsilon}^{i+1} = \vec{\epsilon}^{i+1} - \vec{\epsilon}^i$,
 we solve the linear problem
-$$J_{\epsilon,\epsilon} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{\epsilon}^{i+1} + J_{\epsilon,u} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{u}^{i+1} = -\vec{R}_\epsilon (\vec{\epsilon}^i, \vec{u}^i),$$
-$$J_{u,\epsilon} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{\epsilon}^{i+1} + J_{u,u} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{u}^{i+1} = -\vec{R}_u (\vec{\epsilon}^i, \vec{u}^i),$$
+$$J_{\epsilon,\epsilon} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{\epsilon}^{i+1} + J_{\epsilon,u} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{u}^{i+1} = -\vec{R_\epsilon} (\vec{\epsilon}^i, \vec{u}^i),$$
+$$J_{u,\epsilon} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{\epsilon}^{i+1} + J_{u,u} (\vec{\epsilon}^i, \vec{u}^i) \delta \vec{u}^{i+1} = -\vec{R_u} (\vec{\epsilon}^i, \vec{u}^i),$$
 then update the iterate indices.
 Iteration continues until the magnitude of the residuals is acceptably small.
 If we let $\vec{w}^i = (\vec{u}^i, \vec{\epsilon}^i)^t$, $\vec{R} = (\vec{R_u}, \vec{R_\epsilon})^t$, and
