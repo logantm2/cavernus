@@ -90,7 +90,7 @@ we use a superscript to denote the time step at which a time-dependent
 quantity is evaluated,
 as $\xi^n = \xi(n \Delta t)$.
 RK methods estimate the value at the next time step as
-$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t \sum_{i=1}^s b_i \vec{k}_i,$$
+$$\vec{\epsilon}^{n+1} = \vec{\epsilon}^n + \Delta t \sum_{i=1}^s b_i \vec{k_i},$$
 where $\vec{k}_i, \vec{y}_i$ satisfy
 $$M \vec{k_i} = \vec{F} \left( \vec{y}_i, \vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k_j} \right),$$
 $$K \vec{y_i} = G (\vec{\epsilon}^n + \Delta t \sum_{j=1}^s a_{ij} \vec{k_j}) + \vec{b} + \vec{h}$$
