@@ -40,8 +40,7 @@ class ElasticIntegrator(mfem.BilinearFormIntegrator):
 
             el.CalcPhysDShape(Trans, dshape)
 
-            x = mfem.Vector(num_dims)
-            Trans.Transform(int_point, x)
+            x = Trans.Transform(int_point)
 
             for idim in range(num_dims):
                 for jdim in range(num_dims):
