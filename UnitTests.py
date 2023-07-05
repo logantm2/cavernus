@@ -6,7 +6,7 @@ import numpy as np
 import unittest
 
 class IntegratorTests(unittest.TestCase):
-    def testElasticityOperator(self):
+    def testElasticIntegrator(self):
         # Test on the triangle
         # x > 0, y < 2, y > x
         # with basis order 1.
