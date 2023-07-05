@@ -131,7 +131,7 @@ class IntegratorTests(unittest.TestCase):
 
         analytic_solution *= -2.0
 
-        integrator = Integrators.ElasticityOperator(elasticity_tensor)
+        integrator = Integrators.ElasticIntegrator(elasticity_tensor)
 
         elmat = mfem.DenseMatrix(2)
         integrator.AssembleElementMatrix(finite_element, Trans, elmat)

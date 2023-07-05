@@ -2,7 +2,7 @@ import mfem.par as mfem
 import numpy as np
 
 # This integrates the K matrix in the documentation.
-class ElasticityOperator(mfem.BilinearFormIntegrator):
+class ElasticIntegrator(mfem.BilinearFormIntegrator):
     def __init__(
         self,
         elasticity_tensor
