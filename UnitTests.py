@@ -140,7 +140,122 @@ class IntegratorTests(unittest.TestCase):
 
         for i in range(6):
             for j in range(6):
-                self.assertEqual(analytic_solution[i,j], elmat[i,j], f"Failing at index {i},{j}")
+                self.assertAlmostEqual(analytic_solution[i,j], elmat[i,j], msg=f"Failing at index {i},{j}")
+
+    def testInelasticIntegrator(self):
+        # Test on the triangle
+        # x > 0, y < 2, y > x
+        # with basis order 1.
+        # There are 3 scalar basis functions for this finite element:
+        # psi_1 = 1-y/2
+        # psi_2 = x/2
+        # psi_3 = y/2-x/2
+        # There are 6 test functions:
+        # \hat{\psi_{1,2,3}} = ( \psi_{1,2,3} )
+        #                      (       0      )
+        # \hat{\psi_{4,5,6}} = (       0      )
+        #                      ( \psi_{1,2,3} )
+        # There are 9 trial functions:
+        # \bar{\psi_{1,2,3}} = ( \psi_{1,2,3}  ,      0         )
+        #                      (      0        ,      0         )
+        # \bar{\psi_{4,5,6}} = (      0        ,      0         )
+        #                      (      0        , \psi_{1,2,3}   )
+        # \bar{\psi_{7,8,9}} = (      0        , \psi_{1,2,3}/2 )
+        #                      ( \psi_{1,2,3}/2,      0         )
+        # Use an isotropic, Cartesian elasticity tensor
+        # C_{ijkl} = \lambda \delta_{ij} \delta_{kl} + \mu (\delta_{ik} \delta_{jl} + \delta{il} \delta_{kj})
+        # This contracted with each of the test functions give:
+        # C \bar{\psi_{1,2,3}} = ( (\lambda + 2 \mu) \psi_{1,2,3},                               0)
+        #                        (                              0, \lambda \psi_{1,2,3}           )
+        # C \bar{\psi_{4,5,6}} = ( \lambda \psi_{1,2,3}          ,                               0)
+        #                        (                              0, (\lambda + 2 \mu) \psi_{1,2,3} )
+        # C \bar{\psi_{7,8,9}} = (                              0, \mu \psi_{1,2,3}               )
+        #                        ( \mu \psi_{1,2,3}              ,                               0)
+        # Contracting these with the nabla leads to:
+        # \nabla C \bar{\psi_1} = (               0)
+        #                         (-\lambda/2      )
+        # \nabla C \bar{\psi_2} = ( \lambda/2+\mu  )
+        #                         (               0)
+        # \nabla C \bar{\psi_3} = (-\lambda/2-\mu  )
+        #                         ( \lambda/2      )
+        # \nabla C \bar{\psi_4} = (               0)
+        #                         (-\lambda/2-\mu  )
+        # \nabla C \bar{\psi_5} = ( \lambda/2      )
+        #                         (               0)
+        # \nabla C \bar{\psi_6} = (-\lambda/2      )
+        #                         ( \lambda/2+\mu  )
+        # \nabla C \bar{\psi_7} = (          -\mu/2)
+        #                         (               0)
+        # \nabla C \bar{\psi_8} = (               0)
+        #                         (           \mu/2)
+        # \nabla C \bar{\psi_9} = (           \mu/2)
+        #                         (          -\mu/2)
+        # I'm gonna call these the inelastic stress gradients.
+        # The integrals of the basis functions over this triangle are all 2/3.
+        # Since the inelastic stress gradients are constant over the triangle,
+        # the integrals of these gradients dotted with the test functions
+        # are equal to the gradients dotted with the integrals of the test functions.
+        # Hence they are, in matrix form,
+        # (               0, \lambda/2+\mu  ,-\lambda/2-\mu  ,               0, \lambda/2      ,-\lambda/2      ,          -\mu/2,               0,           \mu/2)
+        # (               0, \lambda/2+\mu  ,-\lambda/2-\mu  ,               0, \lambda/2      ,-\lambda/2      ,          -\mu/2,               0,           \mu/2)
+        # (               0, \lambda/2+\mu  ,-\lambda/2-\mu  ,               0, \lambda/2      ,-\lambda/2      ,          -\mu/2,               0,           \mu/2)
+        # (-\lambda/2      ,               0, \lambda/2      ,-\lambda/2-\mu  ,               0, \lambda/2+\mu  ,               0,           \mu/2,          -\mu/2)
+        # (-\lambda/2      ,               0, \lambda/2      ,-\lambda/2-\mu  ,               0, \lambda/2+\mu  ,               0,           \mu/2,          -\mu/2)
+        # (-\lambda/2      ,               0, \lambda/2      ,-\lambda/2-\mu  ,               0, \lambda/2+\mu  ,               0,           \mu/2,          -\mu/2)
+        # all times 2/3.
+
+        # Make a triangle mesh
+        mesh = mfem.Mesh.MakeCartesian2D(
+            1,
+            1,
+            mfem.Element.TRIANGLE,
+            True,
+            2.0,
+            2.0,
+            False
+        )
+        Trans = mesh.GetElementTransformation(0)
+        finite_element = mfem.H1_TriangleElement(1)
+
+        # Lame constants \lambda and \mu
+        l = 2.0
+        mu = 3.0
+        elasticity_tensor = ElasticityTensors.ConstantIsotropicElasticityTensor(l, mu)
+
+        analytic_solution = np.zeros((6,9))
+        for i in range(3):
+            analytic_solution[i  ,0] = 0.0
+            analytic_solution[i  ,1] = l/2.0 + mu
+            analytic_solution[i  ,2] =-l/2.0 - mu
+            analytic_solution[i  ,3] = 0.0
+            analytic_solution[i  ,4] = l/2.0
+            analytic_solution[i  ,5] =-l/2.0
+            analytic_solution[i  ,6] =       - mu/2.0
+            analytic_solution[i  ,7] = 0.0
+            analytic_solution[i  ,8] =         mu/2.0
+
+            analytic_solution[i+3,0] =-l/2.0
+            analytic_solution[i+3,1] = 0.0
+            analytic_solution[i+3,2] = l/2.0
+            analytic_solution[i+3,3] =-l/2.0 - mu
+            analytic_solution[i+3,4] = 0.0
+            analytic_solution[i+3,5] = l/2.0 + mu
+            analytic_solution[i+3,6] = 0.0
+            analytic_solution[i+3,7] =         mu/2.0
+            analytic_solution[i+3,8] =       - mu/2.0
+
+        analytic_solution *= 2.0/3.0
+
+        integrator = Integrators.InelasticIntegrator(elasticity_tensor)
+
+        elmat = mfem.DenseMatrix(2)
+        integrator.AssembleElementMatrix2(finite_element, finite_element, Trans, elmat)
+        self.assertEqual(6, elmat.Height())
+        self.assertEqual(9, elmat.Width())
+
+        for i in range(6):
+            for j in range(9):
+                self.assertAlmostEqual(analytic_solution[i,j], elmat[i,j], msg=f"Failing at index {i},{j}")
 
 if __name__ == "__main__":
     unittest.main()
