@@ -158,6 +158,7 @@ class InelasticIntegrator(mfem.BilinearFormIntegrator):
             x = Trans.Transform(int_point)
 
             # TODO optimize this.
+            # TODO allow for non-constant elasticity tensors.
             for idim in range(test_num_dims):
                 for jdim in range(trial_num_dims):
                     for idof in range(test_num_dofs):
