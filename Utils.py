@@ -59,3 +59,24 @@ def unflattenSymmetricTensor(components):
         matrix[0,2], matrix[2,0] = (components[5]/2.0,)*2
 
     return matrix
+
+def flattenSymmetricTensor(tensor):
+    dims = tensor.Height()
+    num_components = dims*(dims+1)//2
+    components = mfem.Vector(num_components)
+
+    for i in range(dims):
+        components[i] = tensor[i,i]
+    if dims == 1:
+        pass
+    elif dims == 2:
+        # Multiply by 2 because, by convention,
+        # the components will be multiplied by 1/2 when unflattened.
+        components[2] = 2.0 * tensor[0,1]
+    elif dims == 3:
+        # Same here.
+        components[3] = 2.0 * tensor[0,1]
+        components[4] = 2.0 * tensor[1,2]
+        components[5] = 2.0 * tensor[0,2]
+
+    return components
