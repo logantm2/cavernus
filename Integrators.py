@@ -56,21 +56,12 @@ class ElasticIntegrator(mfem.BilinearFormIntegrator):
                                 strain[jdim, k] += 0.5 * dshape[jdof, k]
                                 strain[k, jdim] += 0.5 * dshape[jdof, k]
 
-                            # Note that the only nonzero column of
-                            # \nabla \hat{\psi_i}
-                            # is the idim-th column,
-                            # so we only have to compute that column
-                            # of the stress tensor.
-                            stress_tensor = np.zeros(num_dims)
-                            for stress_i in range(num_dims):
-                                for k in range(num_dims):
-                                    for l in range(num_dims):
-                                        stress_tensor[stress_i] += self.elasticity_tensor.evaluate(x, stress_i, idim, k, l) * strain[k, l]
+                            stress_tensor = self.elasticity_tensor.calcContraction(x, strain)
 
                             ii = idim*num_dofs + idof
                             jj = jdim*num_dofs + jdof
                             for k in range(num_dims):
-                                elmat[ii, jj] -= weight * stress_tensor[k] * dshape[idof,k]
+                                elmat[ii, jj] -= weight * stress_tensor[k,idim] * dshape[idof,k]
 
 # This integrates the G matrix in the documentation,
 # which is generally not square.
