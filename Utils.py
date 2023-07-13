@@ -125,10 +125,12 @@ def calcVonMisesStress(stress_deviator_components):
             "Utils.calcVonMisesStress"
         )
 
-    vM_stress = 0.0
+    vM_stress_sq = 0.0
     for i in range(space_dims):
-        vM_stress += 3./2. * stress_deviator_components[i]**2.0
+        vM_stress_sq += 3./2. * stress_deviator_components[i]**2.0
     for i in range(space_dims, num_components):
         # The extra factor of 1/2 is needed because of our convention for
         # unflattening symmetric tensor components.
-        vM_stress += 3./4. * stress_deviator_components[i]**2.0
+        vM_stress_sq += 3./4. * stress_deviator_components[i]**2.0
+
+    return np.sqrt(vM_stress_sq)
