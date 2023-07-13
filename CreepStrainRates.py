@@ -53,7 +53,11 @@ class CarterCreepStrainRate(CreepStrainRate):
         creep_strain = mfem.Vector(e_num_dims)
         creep_strain_mat.MultTranspose(e_shapef, creep_strain)
 
-        elastic_strain = total_strain - creep_strain
+        elastic_strain = mfem.Vector(e_num_dims)
+        # mfem subtract doesn't work for some reason
+        # mfem.subtract(total_strain, creep_strain, elastic_strain)
+        for i in range(e_num_dims):
+            elastic_strain[i] = total_strain[i] - creep_strain[i]
 
         x = element_transformation.Transform(element_transformation.GetIntPoint())
 
