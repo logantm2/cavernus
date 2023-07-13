@@ -1,9 +1,31 @@
+import Utils
 import Integrators
 import ElasticityTensors
 
 import mfem.par as mfem
 import numpy as np
 import unittest
+
+class UtilTests(unittest.TestCase):
+    def testFlattenThenUnflatten(self):
+        for dims in range(1,4):
+            original = mfem.DenseMatrix(dims)
+
+            for i in range(dims):
+                for j in range(dims):
+                    original[i,j] = (i+1)*(j+1)
+
+            original.Symmetrize()
+
+            tested = Utils.unflattenSymmetricTensor(Utils.flattenSymmetricTensor(original))
+
+            for i in range(dims):
+                for j in range(dims):
+                    self.assertAlmostEqual(
+                        original[i,j],
+                        tested[i,j],
+                        msg=f"Failing at index {i},{j} with dimensions {dims}"
+                    )
 
 class IntegratorTests(unittest.TestCase):
     def testElasticIntegrator(self):
