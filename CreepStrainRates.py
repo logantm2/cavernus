@@ -66,4 +66,6 @@ class CarterCreepStrainRate(CreepStrainRate):
         vM_stress = Utils.calcVonMisesStress(stress_deviator, hydrostatic_stress)
         rate_coefficient = 3./2. * self.constant * np.exp(-self.activation_energy/gas_constant/self.temperature) * np.abs(np.power(vM_stress, self.exponent-2)) * vM_stress
 
-        creep_strain_rate = stress_deviator * rate_coefficient
+        creep_strain_rate.SetSize(e_num_dims)
+        creep_strain_rate.Assign(stress_deviator)
+        creep_strain_rate *= rate_coefficient
