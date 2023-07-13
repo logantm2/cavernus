@@ -1,6 +1,7 @@
 import Utils
 import Integrators
 import ElasticityTensors
+import CreepStrainRates
 
 import mfem.par as mfem
 import numpy as np
