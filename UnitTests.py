@@ -7,6 +7,8 @@ import mfem.par as mfem
 import numpy as np
 import unittest
 
+gas_constant = 8.314
+
 class UtilTests(unittest.TestCase):
     def testFlattenThenUnflatten(self):
         for dims in range(1,4):
@@ -302,6 +304,151 @@ class IntegratorTests(unittest.TestCase):
         for i in range(6):
             for j in range(9):
                 self.assertAlmostEqual(analytic_solution[i,j], elmat[i,j], msg=f"Failing at index {i},{j}")
+
+    def testCreepStrainIntegrator(self):
+        # Test on the triangle
+        # x > 0, y < 2, y > x
+        # with basis order 1.
+        # There are 3 scalar basis functions for this finite element:
+        # psi_1 = 1-y/2
+        # psi_2 = x/2
+        # psi_3 = y/2-x/2
+        # We will define the problem such that the displacement throughout
+        # the triangle is given by
+        # u(x,y) = [2 - y]
+        #          [y - x].
+        # This is done by defining the interpolation matrix to be
+        # [2, 0, 0]
+        # [0, 0, 2].
+        # Similarly, the creep strain will be given by
+        # \epsilon_cr = [2, 1]
+        #               [1, 3]
+        # This is done by defining the interpolation matrix to be
+        # [  2,   2,   2]
+        # [  3,   3,   3]
+        # [rt2, rt2, rt2].
+        # The gradient of the displacement is
+        # \nabla u(x,y) = [ 0,-1]
+        #                 [-1, 1].
+        # Since this is already symmetric, it is also the total strain.
+        # The elastic strain is the total strain minus the creep strain,
+        # \epsilon_el = [-2,-2]
+        #               [-2,-2].
+        # Use an isotropic, Cartesian elasticity tensor
+        # C_{ijkl} = \lambda \delta_{ij} \delta_{kl} + \mu (\delta_{ik} \delta_{jl} + \delta{il} \delta_{kj}).
+        # The stress is the tensor contraction of the elastic strain with
+        # the elasticity tensor, which is
+        # \sigma = [-4\lambda -4\mu,          -4\mu]
+        #          [          -4\mu,-4\lambda -4\mu].
+        # The formula for the von Mises stress in 2D is
+        # \sigma_{vM} = sqrt( sigma_xx^2 - \sigma_xx \sigma_yy + \sigma_yy^2 + 3 \sigma_xy^2 )
+        # This ends up as
+        # sqrt( 16 \lambda^2 + 32 \lambda \mu + 64 \mu^2 ).
+        # The hydrostatic stress is the trace of the stress tensor divided by 3,
+        # \pi = -8/3(\lambda+\mu).
+        # The stress deviator is \sigma - \pi I,
+        # s = [-4/3(\lambda+\mu),            -4\mu]
+        #     [            -4\mu,-4/3(\lambda+\mu)].
+        # The creep strain rate is therefore, with n=3,
+        # \dot{\epsilon_cr} = 3/2 a \exp(-Q/RT) \sigma_{vM}^2 s
+        # = a \exp(-Q/RT) (24 \lambda^2 + 48 \lambda \mu + 96 \mu^2) [-4/3(\lambda+\mu),            -4\mu]
+        #                                                            [            -4\mu,-4/3(\lambda+\mu)].
+        # There are 9 test functions (using rt2 to denote sqrt(2)):
+        # \bar{\psi_{1,2,3}} = ( \psi_{1,2,3}    ,      0           )
+        #                      (      0          ,      0           )
+        # \bar{\psi_{4,5,6}} = (      0          ,      0           )
+        #                      (      0          , \psi_{1,2,3}     )
+        # \bar{\psi_{7,8,9}} = (      0          , \psi_{1,2,3}/rt2 )
+        #                      ( \psi_{1,2,3}/rt2,      0           )
+        # The operator takes the Frobenius norm of each of these with the creep strain rate
+        # and integrates in the triangle to yield
+        # \vec{F}_{1-6}   = - a \exp(-Q/RT) (24 \lambda^2 + 48 \lambda \mu + 96 \mu^2) 8/9 (\lambda+\mu)
+        # \vec{F}_{7,8,9} = - a \exp(-Q/RT) (24 \lambda^2 + 48 \lambda \mu + 96 \mu^2) rt2 8/3 \mu
+        SQRT2 = np.sqrt(2.0)
+
+        # Make a triangle mesh
+        mesh = mfem.Mesh.MakeCartesian2D(
+            1,
+            1,
+            mfem.Element.TRIANGLE,
+            True,
+            2.0,
+            2.0,
+            False
+        )
+        Trans = mesh.GetElementTransformation(0)
+        space_dims = mesh.Dimension()
+        num_symtensor_dims = space_dims * (space_dims+1) // 2
+
+        # Denote displacements with u, creep strain with e.
+        # Generate finite elements for displacement and creep strain,
+        # since the integrator uses the vector dimension of the
+        # finite elements.
+        fec = mfem.H1_FECollection(1, space_dims)
+        u_fes = mfem.FiniteElementSpace(mesh, fec, space_dims, mfem.Ordering.byNODES)
+        e_fes = mfem.FiniteElementSpace(mesh, fec, num_symtensor_dims, mfem.Ordering.byNODES)
+        finite_element = mfem.H1_TriangleElement(1)
+        u_el = u_fes.GetFE(0)
+        e_el = e_fes.GetFE(0)
+        u_num_dofs = u_el.GetDof()
+        e_num_dofs = e_el.GetDof()
+
+        # Lame constants \lambda and \mu
+        l = 2.0
+        mu = 3.0
+        elasticity_tensor = ElasticityTensors.ConstantIsotropicElasticityTensor(l, mu)
+
+        carter_constant = 1.0
+        carter_exponent = 3.0
+        carter_activation_energy = 3.0
+        temperature = 4.0
+        creep_strain_rate = CreepStrainRates.CarterCreepStrainRate(
+            carter_constant,
+            carter_exponent,
+            carter_activation_energy,
+            temperature,
+            elasticity_tensor
+        )
+
+        integrator = Integrators.CreepStrainRateIntegrator(creep_strain_rate)
+
+        # The elfun Vectors define what the displacement and
+        # creep strain will be as functions of space.
+        u_elfun = mfem.Vector(space_dims * u_num_dofs)
+        u_elfun_mat = mfem.DenseMatrix(u_elfun.GetData(), u_num_dofs, space_dims)
+        u_elfun_mat.Assign(0.0)
+        u_elfun_mat[0,0] = 2.0
+        u_elfun_mat[2,1] = 2.0
+
+        e_elfun = mfem.Vector(num_symtensor_dims * e_num_dofs)
+        e_elfun_mat = mfem.DenseMatrix(e_elfun.GetData(), e_num_dofs, num_symtensor_dims)
+        e_elfun_mat.Assign(0.0)
+        for i in range(3):
+            e_elfun_mat[i,0] = 2.0
+            e_elfun_mat[i,1] = 3.0
+            e_elfun_mat[i,2] = SQRT2
+
+        u_elvect = mfem.Vector()
+        e_elvect = mfem.Vector()
+
+        preintegral_constant = - carter_constant * np.exp(-carter_activation_energy/gas_constant/temperature) * (24.0*l**2.0 + 48.0*l*mu + 96.0*mu**2.0)
+        analytic = np.zeros(9)
+        for i in range(6):
+            analytic[i] = preintegral_constant * 8./9. * (l+mu)
+        for i in range(6,9):
+            analytic[i] = preintegral_constant * SQRT2 * 8./3. * mu
+
+        integrator.AssembleElementVector(
+            [u_el, e_el],
+            Trans,
+            [u_elfun, e_elfun],
+            [u_elvect, e_elvect]
+        )
+
+        for i in range(6):
+            self.assertAlmostEqual(0.0, u_elvect[i], msg=f"u_elvect is nonzero at index {i}")
+        for i in range(9):
+            self.assertAlmostEqual(analytic[i], e_elvect[i], msg=f"Failing with test function {i}. Analytic = {analytic[i]}, computed = {e_elvect[i]}")
 
 if __name__ == "__main__":
     unittest.main()
