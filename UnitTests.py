@@ -27,6 +27,26 @@ class UtilTests(unittest.TestCase):
                         msg=f"Failing at index {i},{j} with dimensions {dims}"
                     )
 
+    def testVonMisesStress(self):
+        # There is a quick formula for 2D that we wanna check our general
+        # function against.
+        dims = 2
+        original = mfem.DenseMatrix(dims)
+
+        for i in range(dims):
+            for j in range(dims):
+                original[i,j] = (i+1)*(j+1)
+
+        original.Symmetrize()
+
+        analytic = np.sqrt(np.square(original[0,0]) - original[0,0] * original[1,1] + np.square(original[1,1]) + 3 * np.square(original[0,1]))
+
+        flat_original = Utils.flattenSymmetricTensor(original)
+        stress_deviator, hydrostatic_stress = Utils.calcFlattenedDeviator(flat_original)
+        vM_stress = Utils.calcVonMisesStress(stress_deviator, hydrostatic_stress)
+
+        self.assertAlmostEqual(analytic, vM_stress)
+
 class IntegratorTests(unittest.TestCase):
     def testElasticIntegrator(self):
         # Test on the triangle
