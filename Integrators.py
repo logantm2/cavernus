@@ -181,3 +181,95 @@ class InelasticIntegrator(mfem.BilinearFormIntegrator):
                                     )
 
                             elmat[ii, jj] += weight * test_shapef[idof] * nabla_C_e[idim]
+
+# Integrates the F operator in the documentation,
+# which is nonlinear.
+class CreepStrainRateIntegrator(mfem.BlockNonlinearFormIntegrator):
+    def __init__(
+        self,
+        creep_strain_rate
+    ):
+        self.creep_strain_rate = creep_strain_rate
+
+    # el here is an array containing two finite elements.
+    # The first is the finite element for the displacement,
+    # and the second is the finite element for the creep strain,
+    # which is a symmetric matrix.
+    # The entries of the symmetric matrix are stored in a flattened array.
+    # In 1D, it's just a scalar.
+    # In 2D, store as [e_xx, e_yy, e_xy].
+    # In 3D, store as [e_xx, e_yy, e_zz, e_xy, e_yz, e_xz]
+    # elfun is an array containing the values of the operand at
+    # the nodes of this cell as vectors;
+    # the first vector contains the values of the displacement
+    # and the second, the values of the creep strain.
+    # elvect is an array containing the values of the operator
+    # acted upon the operand as vectors.
+    # Ideally, the creep strain rate only returns values in the
+    # creep strain space, but MFEM does not currently support
+    # mixed nonlinear forms easily,
+    # so instead we just set the result of the operation to zero
+    # in the displacement space.
+    def AssembleElementVector(
+        self,
+        el,
+        Tr,
+        elfun,
+        elvect
+    ):
+        # Use "u" for displacement, "e" for creep strain
+        u_el = el[0]
+        u_num_dofs = u_el.GetDof()
+        u_num_dims = u_el.GetDim()
+        e_el = el[1]
+        e_num_dofs = e_el.GetDof()
+        e_num_dims = u_num_dims * (u_num_dims+1) // 2
+
+        u_elfun = elfun[0]
+        assert u_elfun.Size() == u_num_dofs*u_num_dims
+
+        e_elfun = elfun[1]
+        assert e_elfun.Size() == e_num_dofs*e_num_dims
+
+        u_elfun_mat = mfem.DenseMatrix(u_elfun.GetData(), u_num_dofs, u_num_dims)
+        e_elfun_mat = mfem.DenseMatrix(e_elfun.GetData(), e_num_dofs, e_num_dims)
+
+        u_elvect = elvect[0]
+        u_elvect.SetSize(u_num_dofs*u_num_dims)
+        u_elvect.Assign(0.0)
+
+        e_elvect = elvect[1]
+        e_elvect.SetSize(e_num_dofs*e_num_dims)
+        e_elvect_mat = mfem.DenseMatrix(
+            e_elvect.GetData(),
+            e_num_dofs,
+            e_num_dims
+        )
+        e_elvect_mat.Assign(0.0)
+
+        e_shapef = mfem.Vector(e_num_dofs)
+        F_funval = mfem.Vector(e_num_dims)
+
+        # TODO reevaluate the necessary quadrature order.
+        integration_order = 2*e_el.GetOrder() + Tr.OrderW()
+        int_rule = mfem.IntRules.Get(e_el.GetGeomType(), integration_order)
+
+        for ip in range(int_rule.GetNPoints()):
+            int_point = int_rule.IntPoint(ip)
+            Tr.SetIntPoint(int_point)
+
+            weight = Tr.Weight() * int_point.weight
+
+            e_el.CalcPhysShape(Tr, e_shapef)
+
+            # Evaluate creep strain rate at integration point.
+            self.creep_strain_rate.evaluate(
+                u_el,
+                e_el,
+                Tr,
+                u_elfun_mat,
+                e_elfun_mat,
+                F_funval
+            )
+
+            mfem.AddMult_a_VWt(weight, e_shapef, F_funval, e_elvect_mat)
