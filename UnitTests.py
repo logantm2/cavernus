@@ -30,6 +30,7 @@ class UtilTests(unittest.TestCase):
     def testVonMisesStress(self):
         # There is a quick formula for 2D that we wanna check our general
         # function against.
+        # \sigma_{vM} = sqrt( sigma_xx^2 - \sigma_xx \sigma_yy + \sigma_yy^2 + 3 \sigma_xy )
         dims = 2
         original = mfem.DenseMatrix(dims)
 
