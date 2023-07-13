@@ -9,19 +9,20 @@ class ElasticityTensor(abc.ABC):
     def evaluate(self, x, i, j, k, l):
         pass
 
+    # Only works with symmetric input tensors.
     # TODO: optimize this. Can probably skip the unflatten->flatten steps
-    def calcFlattenedStress(self, x, flattened_elastic_strain):
-        elastic_strain = Utils.unflattenSymmetricTensor(flattened_elastic_strain)
-        dims = elastic_strain.Height()
-        stress = mfem.DenseMatrix(dims)
-        stress.Assign(0.0)
+    def calcFlattenedContraction(self, x, flattened_symmetric_input_tensor):
+        symmetric_input_tensor = Utils.unflattenSymmetricTensor(flattened_symmetric_input_tensor)
+        dims = symmetric_input_tensor.Height()
+        contraction = mfem.DenseMatrix(dims)
+        contraction.Assign(0.0)
         for i in range(dims):
             for j in range(dims):
                 for k in range(dims):
                     for l in range(dims):
-                        stress[i,j] += self.evaluate(x, i, j, k, l) * elastic_strain[k, l]
+                        contraction[i,j] += self.evaluate(x, i, j, k, l) * symmetric_input_tensor[k, l]
 
-        return Utils.flattenSymmetricTensor(stress)
+        return Utils.flattenSymmetricTensor(contraction)
 
 class ConstantIsotropicElasticityTensor(ElasticityTensor):
     def __init__(self, l, mu):
