@@ -1,6 +1,8 @@
 import mfem.par as mfem
 import numpy as np
 
+SQRT2 = np.sqrt(2.0)
+
 # This integrates the K matrix in the documentation.
 class ElasticIntegrator(mfem.BilinearFormIntegrator):
     def __init__(
@@ -76,8 +78,8 @@ class InelasticIntegrator(mfem.BilinearFormIntegrator):
     # whereas the test finite element space comprises vectors.
     # The entries of the trial space are stored in a flattened vector.
     # In 1D, it's just a scalar.
-    # In 2D, store as [e_xx, e_yy, e_xy].
-    # In 3D, store as [e_xx, e_yy, e_zz, e_xy, e_yz, e_xz]
+    # In 2D, store as [e_xx, e_yy, sqrt(2)*e_xy].
+    # In 3D, store as [e_xx, e_yy, e_zz, sqrt(2)*e_xy, sqrt(2)*e_yz, sqrt(2)*e_xz].
     def AssembleElementMatrix2(
         self,
         trial_fe,
@@ -160,14 +162,17 @@ class InelasticIntegrator(mfem.BilinearFormIntegrator):
                             nabla_C_e.Assign(0.0)
                             for k in range(space_dims):
                                 for l in range(space_dims):
-                                    nabla_C_e[k] += 0.5 * trial_dshape[jdof, l] * self.elasticity_tensor.evaluate(
+                                    off_diagonal_multiplier = 1.0
+                                    if jdim >= space_dims:
+                                        off_diagonal_multiplier = SQRT2
+                                    nabla_C_e[k] += off_diagonal_multiplier * 0.5 * trial_dshape[jdof, l] * self.elasticity_tensor.evaluate(
                                         x,
                                         k,
                                         l,
                                         nonzero_e_entries[jdim,0,0],
                                         nonzero_e_entries[jdim,0,1]
                                     )
-                                    nabla_C_e[k] += 0.5 * trial_dshape[jdof, l] * self.elasticity_tensor.evaluate(
+                                    nabla_C_e[k] += off_diagonal_multiplier * 0.5 * trial_dshape[jdof, l] * self.elasticity_tensor.evaluate(
                                         x,
                                         k,
                                         l,
