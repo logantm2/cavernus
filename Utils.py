@@ -107,3 +107,28 @@ def calcFlattenedDeviator(components):
         deviator[i] -= mean
 
     return deviator
+
+# Given a flattened stress deviator,
+# compute the von Mises stress, a scalar.
+def calcVonMisesStress(stress_deviator_components):
+    num_components = stress_deviator_components.Size()
+    if num_components == 1:
+        space_dims = 1
+    elif num_components == 3:
+        space_dims = 2
+    elif num_components == 6:
+        space_dims = 3
+    else:
+        logAndExit(
+            "error",
+            "Invalid number of components!",
+            "Utils.calcVonMisesStress"
+        )
+
+    vM_stress = 0.0
+    for i in range(space_dims):
+        vM_stress += 3./2. * stress_deviator_components[i]**2.0
+    for i in range(space_dims, num_components):
+        # The extra factor of 1/2 is needed because of our convention for
+        # unflattening symmetric tensor components.
+        vM_stress += 3./4. * stress_deviator_components[i]**2.0
