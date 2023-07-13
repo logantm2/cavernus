@@ -107,7 +107,8 @@ def calcFlattenedDeviator(components):
     for i in range(space_dims):
         mean += components[i]/3.0
 
-    deviator = components
+    deviator = mfem.Vector(num_components)
+    deviator.Assign(components)
     for i in range(space_dims):
         deviator[i] -= mean
 
