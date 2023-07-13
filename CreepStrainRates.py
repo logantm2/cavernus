@@ -64,6 +64,6 @@ class CarterCreepStrainRate(CreepStrainRate):
         stress = self.elasticity_tensor.calcFlattenedContraction(x, elastic_strain)
         stress_deviator, hydrostatic_stress = Utils.calcFlattenedDeviator(stress)
         vM_stress = Utils.calcVonMisesStress(stress_deviator, hydrostatic_stress)
-        rate_coefficient = 3./2. * self.constant * np.exp(-self.activation_energy/constants.gas_constant/self.temperature) * np.power(vM_stress, self.exponent-1)
+        rate_coefficient = 3./2. * self.constant * np.exp(-self.activation_energy/gas_constant/self.temperature) * np.abs(np.power(vM_stress, self.exponent-2)) * vM_stress
 
         creep_strain_rate = stress_deviator * rate_coefficient
