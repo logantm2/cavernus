@@ -5,9 +5,8 @@ import CreepStrainRates
 
 import mfem.par as mfem
 import numpy as np
+from scipy.constants import gas_constant
 import unittest
-
-gas_constant = 8.314
 
 class UtilTests(unittest.TestCase):
     def testFlattenThenUnflatten(self):
