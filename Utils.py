@@ -80,3 +80,30 @@ def flattenSymmetricTensor(tensor):
         components[5] = 2.0 * tensor[0,2]
 
     return components
+
+# Given a flattened symmetric tensor,
+# compute the deviator tensor.
+def calcFlattenedDeviator(components):
+    num_components = components.Size()
+    if num_components == 1:
+        space_dims = 1
+    elif num_components == 3:
+        space_dims = 2
+    elif num_components == 6:
+        space_dims = 3
+    else:
+        logAndExit(
+            "error",
+            "Invalid number of components!",
+            "Utils.calcFlattenedDeviator"
+        )
+
+    mean = 0.0
+    for i in range(space_dims):
+        mean += components[i]/space_dims
+
+    deviator = components
+    for i in range(space_dims):
+        deviator[i] -= mean
+
+    return deviator
