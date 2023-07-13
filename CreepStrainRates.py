@@ -36,9 +36,9 @@ class CarterCreepStrainRate(CreepStrainRate):
         creep_strain_rate
     ):
         u_num_dofs = displacement_fe.GetDof()
-        u_num_dims = displacement_fe.GetVDim()
+        u_num_dims = displacement_fe.GetDim()
         e_num_dofs = creep_strain_fe.GetDof()
-        e_num_dims = creep_strain_fe.GetVDim()
+        e_num_dims = u_num_dims * (u_num_dims+1) // 2
 
         u_dshape = mfem.DenseMatrix(u_num_dofs, u_num_dims)
         displacement_fe.CalcPhysDShape(element_transformation, u_dshape)
