@@ -23,3 +23,12 @@ class ZeroBoundaryCondition(BoundaryCondition):
 
     def EvalValue(self, x):
         return np.zeros(x.size)
+
+class TestBoundaryCondition(BoundaryCondition):
+    def __init__(self, vdim, boundary_attribute, type):
+        super().__init__(vdim, boundary_attribute, type)
+
+    def EvalValue(self, x):
+        result = np.zeros(x.size)
+        result[0] = 1.0
+        return result
