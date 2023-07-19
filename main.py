@@ -10,6 +10,42 @@ import mfem.par as mfem
 
 from mpi4py import MPI
 
+# The built-in PyMFEM wrapper for the ParNonlinearForm doesn't work,
+# so I made a reduced-capacity one here that does the job in the one
+# place that we use the ParNonlinearForm.
+class NFWrapper(mfem.ParNonlinearForm):
+    def __init__(
+        self,
+        pf
+    ):
+        super().__init__(pf)
+        self.dnfi = []
+
+    def AddDomainIntegrator(self, nlfi):
+        super().AddDomainIntegrator(nlfi)
+        self.dnfi.append(nlfi)
+
+    def Mult(self, x, y):
+        P = self.GetProlongation()
+        px = mfem.Vector(P.Height())
+        P.Mult(x, px)
+        py = mfem.Vector(P.Height())
+        py.Assign(0.0)
+
+        fes = self.FESpace()
+        el_x = mfem.Vector()
+        el_y = mfem.Vector()
+        for i in range(fes.GetNE()):
+            fe = fes.GetFE(i)
+            vdofs = mfem.intArray(fes.GetElementVDofs(i))
+            T = fes.GetElementTransformation(i)
+            px.GetSubVector(vdofs, el_x)
+            for k in range(len(self.dnfi)):
+                self.dnfi[k].AssembleElementVector(fe, T, el_x, el_y)
+                py.AddElementVector(vdofs, el_y)
+
+        P.MultTranspose(py, y)
+
 class CavernusOperator(mfem.PyTimeDependentOperator):
     def __init__(
         self,
@@ -77,7 +113,7 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         self.G_operator.Assemble()
 
         # F operator.
-        self.F_operator = mfem.ParNonlinearForm(combined_fespace)
+        self.F_operator = NFWrapper(combined_fespace)
         self.F_operator.AddDomainIntegrator(Integrators.CreepStrainRateIntegrator(self.creep_strain_rate))
 
         # M operator.
@@ -281,6 +317,9 @@ def main(input):
 
     u_gf.Distribute(u_epsilon.GetBlock(0))
     epsilon_gf.Distribute(u_epsilon.GetBlock(1))
+    operator.instantaneousDisplacement(epsilon_gf, u_gf)
+    data_collection.SetCycle(timestep)
+    data_collection.SetTime(time)
     data_collection.Save()
 
     exit(0)
