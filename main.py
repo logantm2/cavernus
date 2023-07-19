@@ -96,6 +96,9 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
             self.B_
         )
 
+        self.linear_solver.SetOperator(self.A_.Ptr())
+        self.linear_solver.Mult(self.B_, self.X_)
+
         self.K_operator.RecoverFEMSolution(
             self.X_,
             self.u_linear_form,
