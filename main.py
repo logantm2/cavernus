@@ -4,6 +4,7 @@ import Integrators
 import BoundaryConditions
 import ElasticityTensors
 import CreepStrainRates
+import Utils
 
 import mfem.par as mfem
 
@@ -14,6 +15,7 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         self,
         ufespace,
         efespace,
+        combined_fespace,
         body_force,
         boundary_conditions,
         elasticity_tensor,
@@ -67,13 +69,15 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         # Now set up the K operator.
         self.K_operator = mfem.ParBilinearForm(ufespace)
         self.K_operator.AddDomainIntegrator(Integrators.ElasticIntegrator(self.elasticity_tensor))
+        self.K_operator.Assemble()
 
         # G operator.
         self.G_operator = mfem.ParMixedBilinearForm(efespace, ufespace)
         self.G_operator.AddDomainIntegrator(Integrators.InelasticIntegrator(self.elasticity_tensor))
+        self.G_operator.Assemble()
 
         # F operator.
-        self.F_operator = mfem.ParBlockNonlinearForm([ufespace, efespace])
+        self.F_operator = mfem.ParNonlinearForm(combined_fespace)
         self.F_operator.AddDomainIntegrator(Integrators.CreepStrainRateIntegrator(self.creep_strain_rate))
 
         # M operator.
@@ -100,9 +104,7 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
     # solve for the displacement.
     def instantaneousDisplacement(self, epsilon_gf, u_gf):
         self.u_linear_form.Assemble()
-        self.G_operator.Assemble() # LTM is this needed?
         self.G_operator.AddMult(epsilon_gf, self.u_linear_form)
-        self.K_operator.Assemble() # LTM is this needed?
 
         # Project Dirichlet boundary conditions to solution.
         for i, bc in enumerate(self.boundary_conditions):
@@ -162,7 +164,7 @@ def main(input):
     order = input["order"]
     ode_solver = input["ode_solver"]
     t_final = input["t_final"]
-    dt = input["dt"]
+    num_timesteps = input["num_timesteps"]
     mesh_filename = input["mesh_filename"]
     initial_creep_strain = input["initial_creep_strain"]
     boundary_conditions = input["boundary_conditions"]
@@ -205,6 +207,7 @@ def main(input):
     eglob_size = efespace.GlobalTrueVSize()
     if (myid == 0):
         print(f"Number of inelastic creep strain unknowns: {eglob_size}")
+    combined_fespace = mfem.ParFiniteElementSpace(pmesh, fec, dim + num_epsilon_components, mfem.Ordering.byNODES)
 
     # Primal dofs are stored in separate MFEM grid functions.
     u_gf = mfem.ParGridFunction(ufespace)
@@ -221,6 +224,7 @@ def main(input):
     operator = CavernusOperator(
         ufespace,
         efespace,
+        combined_fespace,
         body_force,
         boundary_conditions,
         elasticity_tensor,
@@ -251,8 +255,34 @@ def main(input):
     data_collection.SetCycle(0)
     data_collection.SetTime(0.0)
     data_collection.SaveMesh()
-
     data_collection.Save()
+
+    # Time integration.
+    time = 0.0
+    timestep = 0
+    operator.SetTime(time)
+    ode_solver.Init(operator)
+    last_step = False
+
+    while not last_step:
+        Utils.logAndContinue(
+            "info",
+            f"At timestep {timestep}",
+            "main"
+        )
+
+        dt = min(t_final - time, t_final/num_timesteps)
+        time, dt = ode_solver.Step(u_epsilon, time, dt)
+
+        if (time >= t_final - 1.e-8*dt):
+            last_step = True
+
+        timestep = timestep + 1
+
+    u_gf.Distribute(u_epsilon.GetBlock(0))
+    epsilon_gf.Distribute(u_epsilon.GetBlock(1))
+    data_collection.Save()
+
     exit(0)
 
     def visualize(out, pmesh, deformed_nodes, field,
@@ -368,7 +398,7 @@ if __name__ == "__main__":
         "order" : 1,
         "ode_solver" : mfem.ForwardEulerSolver(),
         "t_final" : 275.0 * 24.0 * 3600.0, # Seconds in 275 days
-        "dt" : 1.5 * 24.0 * 3600.0, # Seconds in 1.5 days
+        "num_timesteps" : 185,
         "mesh_filename" : "test.msh",
         "initial_creep_strain" : InitialConditions.ZeroInitialInelasticCreepStrain(3),
         "boundary_conditions" : [
