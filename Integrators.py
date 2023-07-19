@@ -9,6 +9,7 @@ class ElasticIntegrator(mfem.BilinearFormIntegrator):
         self,
         elasticity_tensor
     ):
+        super().__init__()
         self.elasticity_tensor = elasticity_tensor
 
     def AssembleElementMatrix(
@@ -72,6 +73,7 @@ class InelasticIntegrator(mfem.BilinearFormIntegrator):
         self,
         elasticity_tensor
     ):
+        super().__init__()
         self.elasticity_tensor = elasticity_tensor
 
     # The trial finite element space comprises symmetric matrices
@@ -189,6 +191,7 @@ class CreepStrainRateIntegrator(mfem.BlockNonlinearFormIntegrator):
         self,
         creep_strain_rate
     ):
+        super().__init__()
         self.creep_strain_rate = creep_strain_rate
 
     # el here is an array containing two finite elements.
