@@ -18,8 +18,8 @@ class BoundaryCondition(mfem.VectorPyCoefficient, abc.ABC):
         pass
 
 class ZeroBoundaryCondition(BoundaryCondition):
-    def __init__(self, boundary_attribute, type):
-        super().__init__(1, boundary_attribute, type)
+    def __init__(self, vdim, boundary_attribute, type):
+        super().__init__(vdim, boundary_attribute, type)
 
     def EvalValue(self, x):
         return np.zeros(x.size)
