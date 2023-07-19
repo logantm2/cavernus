@@ -22,4 +22,4 @@ class ZeroBoundaryCondition(BoundaryCondition):
         super().__init__(1, boundary_attribute, type)
 
     def EvalValue(self, x):
-        return np.zeros(x.Size())
+        return np.zeros(x.size)
