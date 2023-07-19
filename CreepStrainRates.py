@@ -28,22 +28,20 @@ class CarterCreepStrainRate(CreepStrainRate):
 
     def evaluate(
         self,
-        displacement_fe,
-        creep_strain_fe,
+        fe,
         element_transformation,
         displacement_mat,
         creep_strain_mat,
         creep_strain_rate
     ):
-        u_num_dofs = displacement_fe.GetDof()
-        u_num_dims = displacement_fe.GetDim()
-        e_num_dofs = creep_strain_fe.GetDof()
+        num_dofs = fe.GetDof()
+        u_num_dims = fe.GetDim()
         e_num_dims = u_num_dims * (u_num_dims+1) // 2
 
-        u_dshape = mfem.DenseMatrix(u_num_dofs, u_num_dims)
-        displacement_fe.CalcPhysDShape(element_transformation, u_dshape)
-        e_shapef = mfem.Vector(e_num_dofs)
-        creep_strain_fe.CalcPhysShape(element_transformation, e_shapef)
+        u_dshape = mfem.DenseMatrix(num_dofs, u_num_dims)
+        fe.CalcPhysDShape(element_transformation, u_dshape)
+        e_shapef = mfem.Vector(num_dofs)
+        fe.CalcPhysShape(element_transformation, e_shapef)
 
         grad_u = mfem.DenseMatrix(u_num_dims)
         mfem.MultAtB(displacement_mat, u_dshape, grad_u)

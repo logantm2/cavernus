@@ -379,18 +379,8 @@ class IntegratorTests(unittest.TestCase):
         space_dims = mesh.Dimension()
         num_symtensor_dims = space_dims * (space_dims+1) // 2
 
-        # Denote displacements with u, creep strain with e.
-        # Generate finite elements for displacement and creep strain,
-        # since the integrator uses the vector dimension of the
-        # finite elements.
-        fec = mfem.H1_FECollection(1, space_dims)
-        u_fes = mfem.FiniteElementSpace(mesh, fec, space_dims, mfem.Ordering.byNODES)
-        e_fes = mfem.FiniteElementSpace(mesh, fec, num_symtensor_dims, mfem.Ordering.byNODES)
         finite_element = mfem.H1_TriangleElement(1)
-        u_el = u_fes.GetFE(0)
-        e_el = e_fes.GetFE(0)
-        u_num_dofs = u_el.GetDof()
-        e_num_dofs = e_el.GetDof()
+        num_dofs = finite_element.GetDof()
 
         # Lame constants \lambda and \mu
         l = 2.0
@@ -411,24 +401,22 @@ class IntegratorTests(unittest.TestCase):
 
         integrator = Integrators.CreepStrainRateIntegrator(creep_strain_rate)
 
-        # The elfun Vectors define what the displacement and
+        elfun = mfem.Vector(num_dofs * (space_dims + num_symtensor_dims))
+        # The elfun Vector define what the displacement and
         # creep strain will be as functions of space.
-        u_elfun = mfem.Vector(space_dims * u_num_dofs)
-        u_elfun_mat = mfem.DenseMatrix(u_elfun.GetData(), u_num_dofs, space_dims)
+        u_elfun = mfem.Vector(elfun, 0, space_dims * num_dofs)
+        u_elfun_mat = mfem.DenseMatrix(u_elfun.GetData(), num_dofs, space_dims)
         u_elfun_mat.Assign(0.0)
         u_elfun_mat[0,0] = 2.0
         u_elfun_mat[2,1] = 2.0
 
-        e_elfun = mfem.Vector(num_symtensor_dims * e_num_dofs)
-        e_elfun_mat = mfem.DenseMatrix(e_elfun.GetData(), e_num_dofs, num_symtensor_dims)
+        e_elfun = mfem.Vector(elfun, num_dofs * space_dims, num_symtensor_dims * num_dofs)
+        e_elfun_mat = mfem.DenseMatrix(e_elfun.GetData(), num_dofs, num_symtensor_dims)
         e_elfun_mat.Assign(0.0)
         for i in range(3):
             e_elfun_mat[i,0] = 2.0
             e_elfun_mat[i,1] = 3.0
             e_elfun_mat[i,2] = SQRT2
-
-        u_elvect = mfem.Vector()
-        e_elvect = mfem.Vector()
 
         preintegral_constant = - carter_constant * np.exp(-carter_activation_energy/gas_constant/temperature) * (24.0*l**2.0 + 48.0*l*mu + 96.0*mu**2.0)
         analytic = np.zeros(9)
@@ -437,13 +425,16 @@ class IntegratorTests(unittest.TestCase):
         for i in range(6,9):
             analytic[i] = preintegral_constant * SQRT2 * 8./3. * mu
 
+        elvect = mfem.Vector()
         integrator.AssembleElementVector(
-            [u_el, e_el],
+            finite_element,
             Trans,
-            [u_elfun, e_elfun],
-            [u_elvect, e_elvect]
+            elfun,
+            elvect
         )
 
+        u_elvect = mfem.Vector(elvect, 0, space_dims * num_dofs)
+        e_elvect = mfem.Vector(elvect, num_dofs * space_dims, num_symtensor_dims * num_dofs)
         for i in range(6):
             self.assertAlmostEqual(0.0, u_elvect[i], msg=f"u_elvect is nonzero at index {i}")
         for i in range(9):
