@@ -4,7 +4,7 @@ import abc
 
 class InitialInelasticCreepStrain(mfem.VectorPyCoefficient, abc.ABC):
     def __init__(self, dim):
-        mfem.VectoyPyCoefficient.__init__(self, dim)
+        mfem.VectorPyCoefficient.__init__(self, dim)
 
     @abc.abstractmethod
     def EvalValue(self, x):
