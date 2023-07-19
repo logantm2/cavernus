@@ -1,6 +1,6 @@
 import Utils
 import mfem.par as mfem
-import scipy.constants as constants
+from scipy.constants import gas_constant
 import numpy as np
 import abc
 
