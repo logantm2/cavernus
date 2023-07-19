@@ -208,6 +208,7 @@ def main(input):
     body_force = input["body_force"]
     elasticity_tensor = input["elasticity_tensor"]
     creep_strain_rate = input["creep_strain_rate"]
+    output_stride = input["output_stride"]
 
     device = mfem.Device('cpu')
     if myid == 0:
@@ -290,8 +291,14 @@ def main(input):
     data_collection.RegisterField("creep_strain", epsilon_gf)
     data_collection.SetCycle(0)
     data_collection.SetTime(0.0)
+    for i in range(x_ref.Size()):
+        x_ref[i] = x_ref[i] + u_gf[i]
+    nodes = x_ref
+    owns_nodes = 0
+    nodes, owns_nodes = pmesh.SwapNodes(nodes, owns_nodes)
     data_collection.SaveMesh()
     data_collection.Save()
+    pmesh.SwapNodes(nodes, owns_nodes)
 
     # Time integration.
     time = 0.0
@@ -315,12 +322,36 @@ def main(input):
 
         timestep = timestep + 1
 
+        if timestep % output_stride == 0:
+            u_gf.Distribute(u_epsilon.GetBlock(0))
+            epsilon_gf.Distribute(u_epsilon.GetBlock(1))
+            operator.instantaneousDisplacement(epsilon_gf, u_gf)
+            pmesh.GetNodes(x_ref)
+            for i in range(x_ref.Size()):
+                x_ref[i] = x_ref[i] + u_gf[i]
+            nodes = x_ref
+            owns_nodes = 0
+            nodes, owns_nodes = pmesh.SwapNodes(nodes, owns_nodes)
+            data_collection.SetCycle(timestep)
+            data_collection.SetTime(time)
+            data_collection.SaveMesh()
+            data_collection.Save()
+            pmesh.SwapNodes(nodes, owns_nodes)
+
     u_gf.Distribute(u_epsilon.GetBlock(0))
     epsilon_gf.Distribute(u_epsilon.GetBlock(1))
     operator.instantaneousDisplacement(epsilon_gf, u_gf)
+    pmesh.GetNodes(x_ref)
+    for i in range(x_ref.Size()):
+        x_ref[i] = x_ref[i] + u_gf[i]
+    nodes = x_ref
+    owns_nodes = 0
+    nodes, owns_nodes = pmesh.SwapNodes(nodes, owns_nodes)
     data_collection.SetCycle(timestep)
     data_collection.SetTime(time)
+    data_collection.SaveMesh()
     data_collection.Save()
+    pmesh.SwapNodes(nodes, owns_nodes)
 
 if __name__ == "__main__":
     # PCG solver with BoomerAMG preconditioner
@@ -346,10 +377,11 @@ if __name__ == "__main__":
         "mesh_filename" : "test.msh",
         "initial_creep_strain" : InitialConditions.ZeroInitialInelasticCreepStrain(3),
         "boundary_conditions" : [
-            BoundaryConditions.ZeroBoundaryCondition(2, 11, "neumann"), # cavern
+            BoundaryConditions.TestBoundaryCondition(2, 11, "neumann"), # cavern
             BoundaryConditions.ZeroBoundaryCondition(2, 21, "dirichlet"), # top
             BoundaryConditions.ZeroBoundaryCondition(2, 22, "dirichlet")  # right
         ],
+        "output_stride" : 1,
         "linear_solver" : linear_solver,
         "body_force" : BodyForces.ZeroBodyForce(2),
         "elasticity_tensor" : elasticity_tensor,
