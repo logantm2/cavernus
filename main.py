@@ -358,8 +358,8 @@ if __name__ == "__main__":
     linear_solver.SetPrintLevel(0)
     linear_solver.SetPreconditioner(amg)
 
-    youngs_modulus = 35.e9
-    poisson_ratio = 0.25
+    youngs_modulus = 44.e9
+    poisson_ratio = 0.3
     l = youngs_modulus*poisson_ratio/(1.+poisson_ratio)/(1.-poisson_ratio)
     mu = youngs_modulus/2./(1.+poisson_ratio)
     elasticity_tensor = ElasticityTensors.ConstantIsotropicElasticityTensor(l, mu)
@@ -380,10 +380,10 @@ if __name__ == "__main__":
         "body_force" : BodyForces.ZeroBodyForce(2),
         "elasticity_tensor" : elasticity_tensor,
         "creep_strain_rate" : CreepStrainRates.CarterCreepStrainRate(
-            8.1e-27,
+            8.1e-28,
             3.5,
             51600.,
-            300.0,
+            298.0,
             elasticity_tensor
         )
     }
