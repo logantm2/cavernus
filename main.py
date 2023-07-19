@@ -3,6 +3,7 @@ import BodyForces
 import Integrators
 import BoundaryConditions
 import ElasticityTensors
+import CreepStrainRates
 
 import mfem.par as mfem
 
@@ -16,7 +17,8 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         body_force,
         boundary_conditions,
         elasticity_tensor,
-        linear_solver
+        linear_solver,
+        creep_strain_rate
     ):
         mfem.PyTimeDependentOperator.__init__(
             self,
@@ -29,6 +31,7 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         self.boundary_conditions = boundary_conditions
         self.elasticity_tensor = elasticity_tensor
         self.linear_solver = linear_solver
+        self.creep_strain_rate = creep_strain_rate
 
         mesh = ufespace.GetMesh()
 
@@ -69,10 +72,29 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         self.G_operator = mfem.ParMixedBilinearForm(efespace, ufespace)
         self.G_operator.AddDomainIntegrator(Integrators.InelasticIntegrator(self.elasticity_tensor))
 
+        # F operator.
+        self.F_operator = mfem.ParBlockNonlinearForm([ufespace, efespace])
+        self.F_operator.AddDomainIntegrator(Integrators.CreepStrainRateIntegrator(self.creep_strain_rate))
+
+        # M operator.
+        epsilon_dims = self.efespace.GetVDim()
+        epsilon_ones = mfem.Vector(epsilon_dims)
+        epsilon_ones.Assign(1.0)
+        epsilon_ones_coef = mfem.VectorConstantCoefficient(epsilon_ones)
+        self.M_operator = mfem.ParBilinearForm(efespace)
+        self.M_operator.AddDomainIntegrator(mfem.VectorMassIntegrator(epsilon_ones_coef))
+        self.M_operator.Assemble(0)
+        self.M_operator.Finalize(0)
+        self.Mmat = self.M_operator.ParallelAssemble()
+
         # Scratch space
         self.A_ = mfem.OperatorPtr()
         self.X_ = mfem.Vector()
         self.B_ = mfem.Vector()
+        self.u_gf_ = mfem.ParGridFunction(ufespace)
+        self.e_gf_ = mfem.ParGridFunction(efespace)
+        self.w_ = mfem.Vector(ufespace.TrueVSize() + efespace.TrueVSize())
+        self.z_ = mfem.Vector(ufespace.TrueVSize() + efespace.TrueVSize())
 
     # Given the inelastic creep strain (epsilon) at this instant,
     # solve for the displacement.
@@ -105,6 +127,34 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
             u_gf
         )
 
+    def Mult(self, u_epsilon, u_epsilon_dt):
+        u_size = self.ufespace.TrueVSize()
+        e_size = self.efespace.TrueVSize()
+        epsilon = mfem.Vector(u_epsilon, u_size, e_size)
+        du_dt = mfem.Vector(u_epsilon_dt, 0, u_size)
+        depsilon_dt = mfem.Vector(u_epsilon_dt, u_size, e_size)
+
+        # Calculate the displacement due to this creep strain
+        self.e_gf_.Distribute(epsilon)
+        self.instantaneousDisplacement(self.e_gf_, self.u_gf_)
+
+        # Move this creep strain and displacement to scratch true dof vector.
+        w_u = mfem.Vector(self.w_, 0, u_size)
+        w_e = mfem.Vector(self.w_, u_size, e_size)
+        self.u_gf_.GetTrueDofs(w_u)
+        self.e_gf_.GetTrueDofs(w_e)
+
+        # Apply the F operator to this creep strain and displacement.
+        self.F_operator.Mult(self.w_, self.z_)
+
+        # Apply inverse of M operator to get creep strain rate
+        z_e = mfem.Vector(self.z_, u_size, e_size)
+        self.linear_solver.SetOperator(self.Mmat)
+        self.linear_solver.Mult(z_e, depsilon_dt)
+
+        # Ensure that displacement "rate" is zero
+        du_dt.Assign(0.0)
+
 def main(input):
     num_procs = MPI.COMM_WORLD.size
     myid = MPI.COMM_WORLD.rank
@@ -119,6 +169,7 @@ def main(input):
     linear_solver = input["linear_solver"]
     body_force = input["body_force"]
     elasticity_tensor = input["elasticity_tensor"]
+    creep_strain_rate = input["creep_strain_rate"]
 
     device = mfem.Device('cpu')
     if myid == 0:
@@ -173,8 +224,20 @@ def main(input):
         body_force,
         boundary_conditions,
         elasticity_tensor,
-        linear_solver
+        linear_solver,
+        creep_strain_rate
     )
+    operator.instantaneousDisplacement(epsilon_gf, u_gf)
+
+    # A block vector to store the true DoFs
+    true_offset = mfem.intArray(3)
+    true_offset[0] = 0
+    true_offset[1] = ufespace.TrueVSize()
+    true_offset[2] = ufespace.TrueVSize() + efespace.TrueVSize()
+    u_epsilon = mfem.BlockVector(true_offset)
+    # Transfer from initial condition in GridFunctions to Vector of true DoFs
+    u_gf.GetTrueDofs(u_epsilon.GetBlock(0))
+    epsilon_gf.GetTrueDofs(u_epsilon.GetBlock(1))
 
     # For data output
     data_collection = mfem.ParaViewDataCollection("cavernus", pmesh)
@@ -189,7 +252,6 @@ def main(input):
     data_collection.SetTime(0.0)
     data_collection.SaveMesh()
 
-    operator.instantaneousDisplacement(epsilon_gf, u_gf)
     data_collection.Save()
     exit(0)
 
@@ -300,6 +362,7 @@ if __name__ == "__main__":
     poisson_ratio = 0.25
     l = youngs_modulus*poisson_ratio/(1.+poisson_ratio)/(1.-poisson_ratio)
     mu = youngs_modulus/2./(1.+poisson_ratio)
+    elasticity_tensor = ElasticityTensors.ConstantIsotropicElasticityTensor(l, mu)
 
     inputs = {
         "order" : 1,
@@ -315,7 +378,14 @@ if __name__ == "__main__":
         ],
         "linear_solver" : linear_solver,
         "body_force" : BodyForces.ZeroBodyForce(2),
-        "elasticity_tensor" : ElasticityTensors.ConstantIsotropicElasticityTensor(l, mu)
+        "elasticity_tensor" : elasticity_tensor,
+        "creep_strain_rate" : CreepStrainRates.CarterCreepStrainRate(
+            8.1e-27,
+            3.5,
+            51600.,
+            300.0,
+            elasticity_tensor
+        )
     }
 
     main(inputs)
