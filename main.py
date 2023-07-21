@@ -383,9 +383,9 @@ if __name__ == "__main__":
         "mesh_filename" : "test.msh",
         "initial_creep_strain" : InitialConditions.ZeroInitialInelasticCreepStrain(),
         "boundary_conditions" : [
-            BoundaryConditions.TestBoundaryCondition(11, "neumann"), # cavern
-            BoundaryConditions.ZeroBoundaryCondition(21, "dirichlet"), # top
-            BoundaryConditions.ZeroBoundaryCondition(22, "dirichlet")  # right
+            BoundaryConditions.ZeroNeumannBoundaryCondition(11), # cavern
+            BoundaryConditions.ZeroDirichletBoundaryCondition(21), # top
+            BoundaryConditions.ZeroDirichletBoundaryCondition(22)  # right
         ],
         "output_stride" : 1,
         "linear_solver" : linear_solver,
