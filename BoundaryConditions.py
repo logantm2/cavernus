@@ -44,12 +44,11 @@ class NeumannBoundaryCondition(mfem.VectorPyCoefficientBase, abc.ABC):
 
     def Eval(self, V, T, ip):
         vdim = self.GetVDim()
-        x = mfem.Vector(3)
-        T.Transform(ip, x)
+        x = T.Transform(ip)
         V.SetSize(vdim)
         V.Assign(0.0)
 
-        stress = self.EvalValue(x.GetDataArray(), self.GetTime())
+        stress = self.EvalValue(x, self.GetTime())
 
         # Compute the normal on this face.
         normal = mfem.Vector(vdim)
