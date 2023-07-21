@@ -1,1 +1,3 @@
-mfem --install-option="--with-parallel"
+numpy
+scipy
+mpi4py
