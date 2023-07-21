@@ -246,6 +246,12 @@ def main(input):
         print(f"Number of inelastic creep strain unknowns: {eglob_size}")
     combined_fespace = mfem.ParFiniteElementSpace(pmesh, fec, dim + num_epsilon_components, mfem.Ordering.byNODES)
 
+    # Set vector dimensions of Coefficients
+    initial_creep_strain.setVDim(num_epsilon_components)
+    body_force.setVDim(dim)
+    for boundary_condition in boundary_conditions:
+        boundary_condition.setVDim(dim)
+
     # Primal dofs are stored in separate MFEM grid functions.
     u_gf = mfem.ParGridFunction(ufespace)
     epsilon_gf = mfem.ParGridFunction(efespace)
@@ -375,15 +381,15 @@ if __name__ == "__main__":
         "t_final" : 275.0 * 24.0 * 3600.0, # Seconds in 275 days
         "num_timesteps" : 185,
         "mesh_filename" : "test.msh",
-        "initial_creep_strain" : InitialConditions.ZeroInitialInelasticCreepStrain(3),
+        "initial_creep_strain" : InitialConditions.ZeroInitialInelasticCreepStrain(),
         "boundary_conditions" : [
-            BoundaryConditions.TestBoundaryCondition(2, 11, "neumann"), # cavern
-            BoundaryConditions.ZeroBoundaryCondition(2, 21, "dirichlet"), # top
-            BoundaryConditions.ZeroBoundaryCondition(2, 22, "dirichlet")  # right
+            BoundaryConditions.TestBoundaryCondition(11, "neumann"), # cavern
+            BoundaryConditions.ZeroBoundaryCondition(21, "dirichlet"), # top
+            BoundaryConditions.ZeroBoundaryCondition(22, "dirichlet")  # right
         ],
         "output_stride" : 1,
         "linear_solver" : linear_solver,
-        "body_force" : BodyForces.ZeroBodyForce(2),
+        "body_force" : BodyForces.ZeroBodyForce(),
         "elasticity_tensor" : elasticity_tensor,
         "creep_strain_rate" : CreepStrainRates.CarterCreepStrainRate(
             8.1e-28,
