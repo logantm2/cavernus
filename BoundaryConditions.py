@@ -2,7 +2,7 @@ import mfem.par as mfem
 import numpy as np
 import abc
 
-class BoundaryCondition(mfem.VectorPyCoefficient, abc.ABC):
+class BoundaryCondition(mfem.VectorPyCoefficientT, abc.ABC):
     def __init__(
         self,
         boundary_attribute,
@@ -12,24 +12,24 @@ class BoundaryCondition(mfem.VectorPyCoefficient, abc.ABC):
         self.type = type
 
     def setVDim(self, vdim):
-        mfem.VectorPyCoefficient.__init__(self, vdim)
+        mfem.VectorPyCoefficientT.__init__(self, vdim)
 
     @abc.abstractmethod
-    def EvalValue(self, x):
+    def EvalValue(self, x, t):
         pass
 
 class ZeroBoundaryCondition(BoundaryCondition):
     def __init__(self, boundary_attribute, type):
         super().__init__(boundary_attribute, type)
 
-    def EvalValue(self, x):
+    def EvalValue(self, x, t):
         return np.zeros(x.size)
 
 class TestBoundaryCondition(BoundaryCondition):
     def __init__(self, boundary_attribute, type):
         super().__init__(boundary_attribute, type)
 
-    def EvalValue(self, x):
+    def EvalValue(self, x, t):
         result = np.zeros(x.size)
         result[0] = 1.0e-5
         return result
