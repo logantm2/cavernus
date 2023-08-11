@@ -64,7 +64,7 @@ class ElasticIntegrator(mfem.BilinearFormIntegrator):
                             ii = idim*num_dofs + idof
                             jj = jdim*num_dofs + jdof
                             for k in range(num_dims):
-                                elmat[ii, jj] -= weight * stress_tensor[k,idim] * dshape[idof,k]
+                                elmat[ii, jj] += weight * stress_tensor[k,idim] * dshape[idof,k]
 
 # This integrates the G matrix in the documentation,
 # which is generally not square.

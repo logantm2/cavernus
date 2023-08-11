@@ -88,12 +88,8 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
             bc_marker_array[boundary_condition.boundary_attribute-1] = 1
             self.bc_marker_arrays.append(bc_marker_array)
             if boundary_condition.type == "neumann":
-                # Need to subtract the boundary conditions from the linear form.
-                neg_boundary_condition = mfem.ScalarVectorProductCoefficient(-1.0, boundary_condition)
-                zeros = mfem.Vector(2)
-                zeros.Assign(0.0)
                 self.u_linear_form.AddBoundaryIntegrator(
-                    mfem.VectorBoundaryLFIntegrator(neg_boundary_condition),
+                    mfem.VectorBoundaryLFIntegrator(boundary_condition),
                     self.bc_marker_arrays[-1]
                 )
             elif boundary_condition.type == "dirichlet":
@@ -130,9 +126,13 @@ class CavernusOperator(mfem.PyTimeDependentOperator):
         # Scratch space
         self.A_ = mfem.OperatorPtr()
         self.X_ = mfem.Vector()
+        self.X_.Assign(0.0)
         self.B_ = mfem.Vector()
+        self.B_.Assign(0.0)
         self.u_gf_ = mfem.ParGridFunction(ufespace)
+        self.u_gf_.Assign(0.0)
         self.e_gf_ = mfem.ParGridFunction(efespace)
+        self.e_gf_.Assign(0.0)
         self.w_ = mfem.Vector(ufespace.TrueVSize() + efespace.TrueVSize())
         self.z_ = mfem.Vector(ufespace.TrueVSize() + efespace.TrueVSize())
 
