@@ -37,7 +37,7 @@ in space.
 Let $V \subset H^1(\Omega)$ be a subspace of a Sobolev space on $\Omega$.
 For each $v \in V^d$, weak solutions $u, \epsilon_{\mathrm{cr}}$ must satisfy
 $$\int_\Omega v \cdot \nabla \cdot (C : \nabla^{\mathrm{s}}u) \, \mathrm{d}V = \int_{\Omega} v \cdot \nabla \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} \cdot v \, \mathrm{d} V$$
-$$\Rightarrow - \int_{\Omega} \langle \nabla v, (C : \nabla^{\mathrm{s}} u) \rangle_{\mathrm{F}} \, \mathrm{d}V + \int_{\Gamma_{\mathrm{N}}} h \cdot v \, \mathrm{d} S = \int_{\Omega} v \cdot \nabla \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} \cdot v \, \mathrm{d}V,$$
+$$\Rightarrow \int_{\Omega} \langle \nabla v, (C : \nabla^{\mathrm{s}} u) \rangle_{\mathrm{F}} \, \mathrm{d}V - \int_{\Gamma_{\mathrm{N}}} h \cdot v \, \mathrm{d} S = \int_{\Omega} v \cdot \nabla \cdot (C : \epsilon_{\mathrm{cr}}) \, \mathrm{d}V + \int_{\Omega} f^{\mathrm{b}} \cdot v \, \mathrm{d}V,$$
 where the second equation arises through integration by parts
 and $\langle \cdot, \cdot \rangle_{\mathrm{F}}$ denotes the
 Frobenius inner product.
@@ -50,15 +50,15 @@ $$u \approx u_h = \sum_{i=1}^{Nd} u_i \hat{\psi_i},$$
 $$\epsilon_{\mathrm{cr}} \approx \epsilon_h = \sum_{i=1}^{Nd(d+1)/2} \epsilon_i \bar{\psi_i},$$
 where $\hat{\psi_i} \in B_h^d$ and $\bar{\psi_i} \in B_h^M$.
 Now $u_h$ and $\epsilon_h$ must satisfy
-$$-\sum_{j=1}^{Nd} u_j \int_\Omega \langle \nabla \hat{\psi_i}, (C : \nabla^{\mathrm{s}} \hat{\psi_j}) \rangle_{\mathrm{F}} \, \mathrm{d}V = - \int_{\Gamma_{\mathrm{N}}} h \cdot \hat{\psi_i} \, \mathrm{d}S + \sum_{j=1}^{Nd(d+1)/2} \epsilon_j \int_{\Omega} \hat{\psi_i} \cdot \nabla \cdot (C : \bar{\psi_j}) \, \mathrm{d}V+ \int_\Omega f^{\mathrm{b}} \cdot \hat{\psi_i} \, \mathrm{d} V$$
+$$\sum_{j=1}^{Nd} u_j \int_\Omega \langle \nabla \hat{\psi_i}, (C : \nabla^{\mathrm{s}} \hat{\psi_j}) \rangle_{\mathrm{F}} \, \mathrm{d}V = \int_{\Gamma_{\mathrm{N}}} h \cdot \hat{\psi_i} \, \mathrm{d}S + \sum_{j=1}^{Nd(d+1)/2} \epsilon_j \int_{\Omega} \hat{\psi_i} \cdot \nabla \cdot (C : \bar{\psi_j}) \, \mathrm{d}V+ \int_\Omega f^{\mathrm{b}} \cdot \hat{\psi_i} \, \mathrm{d} V$$
 for each $\hat{\psi_i} \in B_h^d$.
 Let $K$ be the $Nd \times Nd$ matrix whose entries are given by
-$$K_{ij} = - \int_\Omega \langle \nabla \hat{\psi_i}, (C : \nabla^{\mathrm{s}} \hat{\psi_j}) \rangle_{\mathrm{F}} \, \mathrm{d}V,$$
+$$K_{ij} = \int_\Omega \langle \nabla \hat{\psi_i}, (C : \nabla^{\mathrm{s}} \hat{\psi_j}) \rangle_{\mathrm{F}} \, \mathrm{d}V,$$
 let $G$ be the $Nd \times Nd(d+1)/2$ matrix whose entries are given by
 $$G_{ij} = \int_{\Omega} \hat{\psi_i} \cdot \nabla \cdot (C : \bar{\psi_j}) \, \mathrm{d}V$$
 and let $\vec{b}$ and $\vec{h}$ be the vectors whose entries are given by
 $$b_i = \int_\Omega f^{\mathrm{b}} \cdot \hat{\psi_i} \, \mathrm{d}V,$$
-$$h_i = - \int_{\Gamma_{\mathrm{N}}} h \cdot \hat{\psi_i} \, \mathrm{d}S.$$
+$$h_i = \int_{\Gamma_{\mathrm{N}}} h \cdot \hat{\psi_i} \, \mathrm{d}S.$$
 Then the weak form of the elasticity equation becomes
 $$K \vec{u} = G \vec{\epsilon} + \vec{b} + \vec{h},$$
 where $\vec{u} = (u_1, \ldots, u_{Nd})^t$
