@@ -378,14 +378,15 @@ if __name__ == "__main__":
     inputs = {
         "order" : 1,
         "ode_solver" : mfem.ForwardEulerSolver(),
-        "t_final" : 275.0 * 24.0 * 3600.0, # Seconds in 275 days
-        "num_timesteps" : 185,
+        "t_final" : 15.e6,
+        "num_timesteps" : 15,
         "mesh_filename" : "test.msh",
         "initial_creep_strain" : InitialConditions.ZeroInitialInelasticCreepStrain(),
         "boundary_conditions" : [
-            BoundaryConditions.ZeroNeumannBoundaryCondition(11), # cavern
-            BoundaryConditions.ZeroDirichletBoundaryCondition(21), # top
-            BoundaryConditions.ZeroDirichletBoundaryCondition(22)  # right
+            BoundaryConditions.KumarMinPressureBC(11, 2250.0, 298.0, 830.0, 160.0), # cavern
+            BoundaryConditions.ZeroNeumannBoundaryCondition(21), # top
+            BoundaryConditions.ZeroNeumannBoundaryCondition(22),  # right
+            BoundaryConditions.ZeroDirichletBoundaryCondition(31)  # the rest, left and bottom
         ],
         "output_stride" : 1,
         "linear_solver" : linear_solver,
